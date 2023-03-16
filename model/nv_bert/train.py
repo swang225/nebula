@@ -3,7 +3,7 @@ import torch.nn as nn
 import os.path as osp
 import pickle
 
-from nebula.model.nvbert import nvBert
+from nebula.model.nv_bert import nvBert
 from nebula.common import Counter
 
 import numpy as np

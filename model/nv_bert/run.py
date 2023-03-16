@@ -1,6 +1,7 @@
-from nebula.model.nvbert import nvBert
+from nebula.model.nv_bert import nvBert
 
-m1 = nvBert()
+temp_path1 = "C:/Users/aphri/Documents/t0002/pycharm/data/ncnet/temp_data"
+m1 = nvBert(temp_dataset_path=temp_path1)
 
 path2 = "C:/Users/aphri/Documents/t0002/pycharm/python/data/nvBench-main/databases/database/car_1/car_1.sqlite"
 m1.specify_dataset(

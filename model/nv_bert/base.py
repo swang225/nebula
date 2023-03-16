@@ -8,10 +8,10 @@ import os.path as osp
 from nebula.common import get_device
 from nebula.data.nvbench.process_dataset import ProcessData4Training
 from nebula.data.nvbench.setup_data_bert import get_bert_tokenizer, setup_data
-from nebula.model.nvbert.component.bert_encoder import BertEncoder, EMBEDDING_SIZE
-from nebula.model.nvbert.component.decoder import Decoder
-from nebula.model.nvbert.component.seq2seq import Seq2Seq
-from nebula.model.nvbert.translate import get_token_types, fix_chart_template
+from nebula.model.nv_bert.component.bert_encoder import BertEncoder, EMBEDDING_SIZE
+from nebula.model.nv_bert.component.decoder import Decoder
+from nebula.model.nv_bert.component.seq2seq import Seq2Seq
+from nebula.model.nv_bert.translate import get_token_types, fix_chart_template
 
 
 # TODO: incomplete, finish translation with guidance
