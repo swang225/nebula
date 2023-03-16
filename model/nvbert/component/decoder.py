@@ -99,7 +99,11 @@ class DecoderLayer(nn.Module):
         # trg = [batch size, trg len, hid dim]
 
         # encoder attention
-        _trg, attention = self.encoder_attention(trg, enc_src, enc_src, src_mask.unsqueeze(1).unsqueeze(2))
+        # src_mask needs to be transformed because bert encoder has different convention
+        _trg, attention = self.encoder_attention(
+            trg, enc_src, enc_src,
+            src_mask.unsqueeze(1).unsqueeze(2)
+        )
 
         # dropout, residual connection and layer norm
         trg = self.enc_attn_layer_norm(trg + self.dropout(_trg))
