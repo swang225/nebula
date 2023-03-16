@@ -1,2 +1,2 @@
-# nebula
+# Nebula
 machine learning research
