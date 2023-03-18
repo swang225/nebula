@@ -5,14 +5,12 @@ from .sublayer import MultiHeadAttentionLayer, PositionwiseFeedforwardLayer
 
 class Encoder(nn.Module):
     def __init__(self,
-                 input_dim,
                  hid_dim,  # == d_model
                  n_layers,
                  n_heads,
                  pf_dim,
                  dropout,
                  device,
-                 TOK_TYPES,
                  max_length=128):
         super().__init__()
 
@@ -66,12 +64,13 @@ class EncoderLayer(nn.Module):
                                                                      dropout)
         self.dropout = nn.Dropout(dropout)
 
-    def forward(self, src, src_mask, batch_matrix):
+    def forward(self, src, src_mask):
         # src = [batch size, src len, hid dim]
         # src_mask = [batch size, src len]
 
         # self attention
-        _src, _attention = self.self_attention(src, src, src, src_mask, batch_matrix)
+        _src, _attention = self.self_attention(
+            src, src, src, src_mask.unsqueeze(1).unsqueeze(2))
 
         # dropout, residual connection and layer norm
         src = self.self_attn_layer_norm(src + self.dropout(_src))

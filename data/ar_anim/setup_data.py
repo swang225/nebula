@@ -126,6 +126,7 @@ class DataPadder:
         data_zip = list(zip(*data))
 
         src_batch, src_mask = self.batch_src(data_zip[0], self._embedding_len)
+        src_batch = src_batch.to(torch.float32)
         lbl_batch = self.batch_lbl(data_zip[1], self._trg_pad_id)
         return src_batch, src_mask, lbl_batch
 
@@ -137,7 +138,7 @@ def setup_data(df_path, batch_size):
     train_df, test_df, valid_df = split_ar_anim_df(df)
     label_vocab = build_vocab(df["label"])
 
-    embedding_len = df["embedding"][0][0]
+    embedding_len = len(df["embedding"][0][0])
     train_ds = ArAnimDataset(train_df[["embedding", "label"]], label_vocab=label_vocab)
     train_dl = DataLoader(
             train_ds,
@@ -178,13 +179,13 @@ def setup_data(df_path, batch_size):
         )
     )
 
-    return train_dl, validation_dl, test_dl, train_dl_small, label_vocab
+    return train_dl, validation_dl, test_dl, train_dl_small, label_vocab, embedding_len
 
 
 if __name__ == '__main__':
     df_path = "C:/Users/aphri/Documents/t0002/pycharm/data/ar_fps2_gray_scale3/df.pkl"
     batch_size = 10
 
-    train_dl, validation_dl, test_dl, train_dl_small, label_vocab = setup_data(df_path, batch_size)
+    train_dl, validation_dl, test_dl, train_dl_small, label_vocab, embedding_len = setup_data(df_path, batch_size)
 
     print(label_vocab)

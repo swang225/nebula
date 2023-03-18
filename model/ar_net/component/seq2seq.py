@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from .attention_forcing import create_visibility_matrix
 
 
 class Seq2Seq(nn.Module):
@@ -11,25 +10,14 @@ class Seq2Seq(nn.Module):
     def __init__(self,
                  encoder,
                  decoder,
-                 SRC,
-                 src_pad_idx,
                  trg_pad_idx,
                  device):
         super().__init__()
 
         self.encoder = encoder
         self.decoder = decoder
-        self.src_pad_idx = src_pad_idx
         self.trg_pad_idx = trg_pad_idx
         self.device = device
-
-    def make_src_mask(self, src):
-        # src = [batch size, src len]
-
-        src_mask = (src != self.src_pad_idx).unsqueeze(1).unsqueeze(2)
-        # src_mask = [batch size, 1, 1, src len]
-
-        return src_mask
 
     def make_trg_mask(self, trg):
         # trg = [batch size, trg len]
