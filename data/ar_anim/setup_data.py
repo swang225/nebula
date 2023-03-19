@@ -132,10 +132,12 @@ class DataPadder:
 
 
 
-def setup_data(df_path, batch_size):
+def setup_data(df_path, batch_size, random_seed=1):
     df = pd.read_pickle(df_path)
 
     train_df, test_df, valid_df = split_ar_anim_df(df)
+    train_df = train_df.sample(frac=1, random_state=random_seed) # randomize train_df
+
     label_vocab = build_vocab(df["label"])
 
     embedding_len = len(df["embedding"][0][0])

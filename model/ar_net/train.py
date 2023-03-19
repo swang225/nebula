@@ -190,15 +190,15 @@ if __name__ == '__main__':
     opt = Namespace()
     opt.data_dir = osp.join(root(), "data", "nvbench", "dataset", "dataset_final")
     opt.db_info = osp.join(root(), "data", "nvbench", "dataset", "database_information.csv")
-    opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/ncnet/output_models_bert"
-    opt.df_path = "C:/Users/aphri/Documents/t0002/pycharm/data/ar_fps2_gray_scale3/df.pkl"
+    opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/ar_fps10_gray_scale3/model"
+    opt.df_path = "C:/Users/aphri/Documents/t0002/pycharm/data/ar_fps10_gray_scale3/df.pkl"
     opt.epoch = 10
     opt.learning_rate = 0.0005
-    opt.batch_size = 20
+    opt.batch_size = 128
     opt.max_input_length = 128
 
     model = arNet(
         df_path=opt.df_path,
         batch_size=opt.batch_size
     )
-    run_train(model=model, opt=opt, testing=True)
+    run_train(model=model, opt=opt, testing=False)
