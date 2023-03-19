@@ -26,7 +26,7 @@ class Counter:
         self.count = 0
 
     def start(self):
-        print("START!")
+        print("counter started")
         self.start_time = time.process_time()
 
     def update(self):

@@ -28,7 +28,7 @@ def train(model, iterator, optimizer, criterion, clip):
 
     counter = Counter(total=len(iterator))
     counter.start()
-
+    print("- start training")
     for i, batch in enumerate(iterator):
         src = batch[0]
         trg = batch[1]
@@ -65,6 +65,13 @@ def train(model, iterator, optimizer, criterion, clip):
 
         counter.update()
 
+        del src
+        del trg
+        del output
+        del output_dim
+        del loss
+
+    print("- end training")
     return epoch_loss / len(iterator)
 
 
@@ -73,6 +80,10 @@ def evaluate(model, iterator, criterion):
 
     epoch_loss = 0
 
+    counter = Counter(total=len(iterator))
+    counter.start()
+
+    print("- start evaluating")
     with torch.no_grad():
         for i, batch in enumerate(iterator):
             src = batch[0]
@@ -97,6 +108,15 @@ def evaluate(model, iterator, criterion):
 
             epoch_loss += loss.item()
 
+            counter.update()
+
+            del src
+            del trg
+            del output
+            del output_dim
+            del loss
+
+    print("- end evaluating")
     return epoch_loss / len(iterator)
 
 
@@ -192,7 +212,7 @@ if __name__ == '__main__':
     opt.temp_dataset_path = "C:/Users/aphri/Documents/t0002/pycharm/data/ncnet/temp_data"
     opt.epoch = 10
     opt.learning_rate = 0.0005
-    opt.batch_size = 20
+    opt.batch_size = 10
     opt.max_input_length = 128
 
     model = nvBert(
