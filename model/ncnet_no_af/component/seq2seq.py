@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from .attention_forcing import create_visibility_matrix
 
 
 class Seq2Seq(nn.Module):
@@ -79,13 +78,10 @@ class Seq2Seq(nn.Module):
         src_mask = self.make_src_mask(src)
         trg_mask = self.make_trg_mask(trg)
 
-        # attention forcing mask
-        batch_visibility_matrix = self.make_visibility_matrix(src, SRC)
-
         # src_mask = [batch size, 1, 1, src len]
         # trg_mask = [batch size, 1, trg len, trg len]
 
-        enc_src, enc_attention = self.encoder(src, src_mask, tok_types, batch_visibility_matrix)
+        enc_src, enc_attention = self.encoder(src, src_mask, tok_types, None)
 
         # enc_src = [batch size, src len, hid dim]
 
