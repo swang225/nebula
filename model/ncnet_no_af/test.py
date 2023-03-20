@@ -2,11 +2,11 @@ import torch
 
 
 from nebula.common import Counter, is_matching
-from nebula.model.ncnet.translate import (
+from nebula.model.ncnet_no_af.translate import (
     postprocessing,
     get_all_table_columns
 )
-from nebula.model.ncnet import ncNet
+from nebula.model.ncnet_no_af import ncNetNoAF
 from nebula import root
 
 import random
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     torch.cuda.manual_seed(SEED)
     torch.backends.cudnn.deterministic = True
 
-    m1 = ncNet(
+    m1 = ncNetNoAF(
         trained_model_path=opt.model,
     )
 

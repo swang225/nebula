@@ -6,20 +6,20 @@ import os.path as osp
 
 import torch
 from nebula.common import get_device
-from nebula.model.ncnet.translate import (
+from nebula.model.ncnet_no_af.translate import (
     translate_sentence_with_guidance,
     translate_sentence,
     postprocessing
 )
-from nebula.model.ncnet.component.seq2seq import Seq2Seq
-from nebula.model.ncnet.component.encoder import Encoder
-from nebula.model.ncnet.component.decoder import Decoder
+from nebula.model.ncnet_no_af.component.seq2seq import Seq2Seq
+from nebula.model.ncnet_no_af.component.encoder import Encoder
+from nebula.model.ncnet_no_af.component.decoder import Decoder
 from nebula.data.nvbench.build_vocab import build_vocab
 from nebula.data.nvbench.process_dataset import ProcessData4Training
 from nebula import root
 
 
-class ncNet:
+class ncNetNoAF:
     def __init__(
             self,
             trained_model_path=None,

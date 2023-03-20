@@ -3,7 +3,7 @@ import torch.nn as nn
 import os.path as osp
 import pickle
 
-from nebula.model.ncnet import ncNet
+from nebula.model.ncnet_no_af import ncNetNoAF
 from nebula.common import Counter
 
 import numpy as np
@@ -113,7 +113,7 @@ def run_train(
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
 
-    m1 = ncNet(batch_size=opt.batch_size)
+    m1 = ncNetNoAF(batch_size=opt.batch_size)
 
     print("initialize weights")
     m1.ncNet.apply(initialize_weights)
