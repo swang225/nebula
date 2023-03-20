@@ -218,15 +218,15 @@ if __name__ == '__main__':
     opt = Namespace()
     opt.data_dir = osp.join(root(), "data", "nvbench", "dataset", "dataset_final")
     opt.db_info = osp.join(root(), "data", "nvbench", "dataset", "database_information.csv")
-    opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/ncnet/output_models_bert"
-    opt.temp_dataset_path = "C:/Users/aphri/Documents/t0002/pycharm/data/ncnet/temp_data"
-    opt.epoch = 10
+    opt.output_dir = "/home/ubuntu/data/ncnet/output_models_bert"
+    opt.temp_dataset_path = "/home/ubuntu/data/ncnet/temp_data"
+    opt.epoch = 5
     opt.learning_rate = 0.0005
-    opt.batch_size = 10
+    opt.batch_size = 64
     opt.max_input_length = 128
 
     model = nvBert(
         temp_dataset_path=opt.temp_dataset_path,
         batch_size=opt.batch_size
     )
-    run_train(model=model, opt=opt, testing=True)
+    run_train(model=model, opt=opt, testing=False)
