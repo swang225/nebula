@@ -66,6 +66,12 @@ def train(model, iterator, optimizer, criterion, clip):
 
         counter.update()
 
+        del src
+        del trg
+        del output
+        del output_dim
+        del loss
+
     return epoch_loss / len(iterator)
 
 
@@ -73,6 +79,9 @@ def evaluate(model, iterator, criterion):
     model.eval()
 
     epoch_loss = 0
+
+    counter = Counter(total=len(iterator))
+    counter.start()
 
     with torch.no_grad():
         for i, batch in enumerate(iterator):
@@ -98,6 +107,14 @@ def evaluate(model, iterator, criterion):
             loss = criterion(output, trg)
 
             epoch_loss += loss.item()
+
+            counter.update()
+
+            del src
+            del trg
+            del output
+            del output_dim
+            del loss
 
     return epoch_loss / len(iterator)
 
@@ -141,6 +158,18 @@ def run_train(
 
         print(f"epoch: {epoch}")
 
+        epoch_model_path = osp.join(opt.output_dir, 'model_' + str(epoch + 1) + '.pt')
+        res_path = osp.join(opt.output_dir, 'train_results.pkl')
+        if osp.exists(epoch_model_path):
+            print(f"model already exist")
+            model.load_model(epoch_model_path)
+
+            res = read_pickle(res_path)
+            train_loss_list = res["train_loss"]
+            valid_loss_list = res["valid_loss"]
+
+            continue
+
         start_time = time.time()
 
         train_loss = train(model.model, train_dl, optimizer, criterion, CLIP)
@@ -163,7 +192,7 @@ def run_train(
         print(f"saving mode for epoch: {epoch + 1}")
         torch.save(
             model.model.state_dict(),
-            str(osp.join(opt.output_dir, 'model_' + str(epoch + 1) + '.pt'))
+            epoch_model_path
         )
 
         train_loss_list.append(train_loss)
@@ -178,9 +207,7 @@ def run_train(
             "train_loss": train_loss_list,
             "valid_loss": valid_loss_list,
         }
-
-        with open(str(osp.join(opt.output_dir, 'train_results.pkl')), 'wb') as handle:
-            pickle.dump(res, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        write_pickle(res_path, res)
 
 
 if __name__ == '__main__':
