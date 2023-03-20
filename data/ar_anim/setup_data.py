@@ -131,16 +131,32 @@ class DataPadder:
         return src_batch, src_mask, lbl_batch
 
 
+def conform_embedding(df, nheads):
+    org_embedding_len = len(df["embedding"][0][0])
+    new_embedding_len = (org_embedding_len // nheads) * nheads
 
-def setup_data(df_path, batch_size, random_seed=1):
+    if org_embedding_len == new_embedding_len:
+        # nothing to do just return
+        return df
+
+    # resize the embedding to be multiples of nheads
+    for i in range(len(df)):
+        new_embedding = df.loc[i, "embedding"]
+        df.loc[i, "embedding"] = list(np.array(new_embedding)[:, :new_embedding_len])
+
+    return df, new_embedding_len
+
+
+
+def setup_data(df_path, batch_size, random_seed=1, nheads=8):
     df = pd.read_pickle(df_path)
+    df, embedding_len = conform_embedding(df, nheads)
 
     train_df, test_df, valid_df = split_ar_anim_df(df)
     train_df = train_df.sample(frac=1, random_state=random_seed) # randomize train_df
 
     label_vocab = build_vocab(df["label"])
 
-    embedding_len = len(df["embedding"][0][0])
     train_ds = ArAnimDataset(train_df[["embedding", "label"]], label_vocab=label_vocab)
     train_dl = DataLoader(
             train_ds,

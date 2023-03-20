@@ -21,6 +21,7 @@ class arNet:
     ):
         self.device = get_device()
 
+        ENC_HEADS = 8
         (
             self.train_dl,
             self.validation_dl,
@@ -30,14 +31,14 @@ class arNet:
             self.embedding_len
         ) = setup_data(
             df_path=df_path,
-            batch_size=batch_size
+            batch_size=batch_size,
+            nheads=ENC_HEADS
         )
 
         OUTPUT_DIM = len(self.label_vocab.vocab)
         HID_DIM = self.embedding_len  # it equals to embedding dimension
         ENC_LAYERS = 3
         DEC_LAYERS = 3
-        ENC_HEADS = 8
         DEC_HEADS = 8
         ENC_PF_DIM = 512
         DEC_PF_DIM = 512
