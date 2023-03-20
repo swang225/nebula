@@ -73,3 +73,11 @@ class arNet:
             self.TRG_PAD_IDX,
             self.device
         ).to(self.device)
+
+    def load_model(self, trained_model_path):
+        self.model.load_state_dict(
+            torch.load(
+                trained_model_path,
+                map_location=self.device
+            )
+        )
