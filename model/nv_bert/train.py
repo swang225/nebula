@@ -4,7 +4,7 @@ import os.path as osp
 import pickle
 
 from nebula.model.nv_bert import nvBert
-from nebula.common import Counter
+from nebula.common import Counter, read_pickle, write_pickle
 
 import numpy as np
 import random
@@ -159,6 +159,18 @@ def run_train(
 
         print(f"epoch: {epoch}")
 
+        epoch_model_path = osp.join(opt.output_dir, 'model_' + str(epoch + 1) + '.pt')
+        res_path = osp.join(opt.output_dir, 'train_results.pkl')
+        if osp.exists(epoch_model_path):
+            print(f"model already exist")
+            model.load_model(epoch_model_path)
+
+            res = read_pickle(res_path)
+            train_loss_list = res["train_loss"]
+            valid_loss_list = res["valid_loss"]
+
+            continue
+
         start_time = time.time()
 
         train_loss = train(model.model, train_dl, optimizer, criterion, CLIP)
@@ -181,7 +193,7 @@ def run_train(
         print(f"saving mode for epoch: {epoch + 1}")
         torch.save(
             model.model.state_dict(),
-            str(osp.join(opt.output_dir, 'model_' + str(epoch + 1) + '.pt'))
+            epoch_model_path
         )
 
         train_loss_list.append(train_loss)
@@ -196,9 +208,7 @@ def run_train(
             "train_loss": train_loss_list,
             "valid_loss": valid_loss_list,
         }
-
-        with open(str(osp.join(opt.output_dir, 'train_results.pkl')), 'wb') as handle:
-            pickle.dump(res, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        write_pickle(res_path, res)
 
 
 if __name__ == '__main__':

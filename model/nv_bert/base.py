@@ -42,7 +42,6 @@ def translate(input_src, model, label_vocab, device):
 class nvBert:
     def __init__(
             self,
-            trained_model_path=None,
             temp_dataset_path=".",
             batch_size=128,
     ):
@@ -89,6 +88,14 @@ class nvBert:
             self.TRG_PAD_IDX,
             self.device
         ).to(self.device)
+
+    def load_model(self, trained_model_path):
+        self.model.load_state_dict(
+            torch.load(
+                trained_model_path,
+                map_location=self.device
+            )
+        )
 
     def translate(
             self,
