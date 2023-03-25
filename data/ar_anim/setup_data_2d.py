@@ -91,15 +91,20 @@ class ArAnimDataset(Dataset):
 
 
 class DataPadder:
-    def __init__(self, trg_pad_id, embedding_len):
+    def __init__(self, trg_pad_id, embedding_shape):
         self._trg_pad_id = trg_pad_id
-        self._embedding_len = embedding_len
+        self._embedding_shape = embedding_shape
 
     @staticmethod
-    def batch_src(data, embedding_len):
+    def pad_frame(embedding_shape):
+        return [[0] * embedding_shape[1]] * embedding_shape[0]
+
+    @staticmethod
+    def batch_src(data, embedding_shape):
         data_len_max = max([len(d) for d in data])
+
         data_batch = torch.tensor([
-            d + [[0] * embedding_len] * (data_len_max - len(d))
+            d + [DataPadder.pad_frame(embedding_shape)] * (data_len_max - len(d))
             for d
             in data
         ])
@@ -125,32 +130,21 @@ class DataPadder:
 
         data_zip = list(zip(*data))
 
-        src_batch, src_mask = self.batch_src(data_zip[0], self._embedding_len)
+        src_batch, src_mask = self.batch_src(data_zip[0], self._embedding_shape)
         src_batch = src_batch.to(torch.float32)
         lbl_batch = self.batch_lbl(data_zip[1], self._trg_pad_id)
         return src_batch, src_mask, lbl_batch
 
 
-def conform_embedding(df, nheads):
-    org_embedding_len = len(df["embedding"][0][0])
-    new_embedding_len = (org_embedding_len // nheads) * nheads
+def get_embedding_shape(df):
+    res = df["embedding"][0][0].shape
 
-    if org_embedding_len == new_embedding_len:
-        # nothing to do just return
-        return df, org_embedding_len
-
-    # resize the embedding to be multiples of nheads
-    for i in range(len(df)):
-        new_embedding = df.loc[i, "embedding"]
-        df.loc[i, "embedding"] = list(np.array(new_embedding)[:, :new_embedding_len])
-
-    return df, new_embedding_len
+    return res
 
 
-
-def setup_data(df_path, batch_size, random_seed=1, nheads=8):
+def setup_data(df_path, batch_size, random_seed=1):
     df = pd.read_pickle(df_path)
-    df, embedding_len = conform_embedding(df, nheads)
+    es = get_embedding_shape(df)
 
     train_df, test_df, valid_df = split_ar_anim_df(df)
     train_df = train_df.sample(frac=1, random_state=random_seed) # randomize train_df
@@ -163,17 +157,17 @@ def setup_data(df_path, batch_size, random_seed=1, nheads=8):
             batch_size=batch_size,
             collate_fn=DataPadder(
                 trg_pad_id=label_vocab.get_stoi()['<pad>'],
-                embedding_len=embedding_len
+                embedding_shape=es
             )
         )
 
-    train_ds_small = ArAnimDataset(train_df[["embedding", "label"]].head(100), label_vocab=label_vocab)
+    train_ds_small = ArAnimDataset(train_df[["embedding", "label"]].head(1000), label_vocab=label_vocab)
     train_dl_small = DataLoader(
         train_ds_small,
         batch_size=batch_size,
         collate_fn=DataPadder(
             trg_pad_id=label_vocab.get_stoi()['<pad>'],
-            embedding_len=embedding_len
+            embedding_shape=es
         )
     )
 
@@ -183,7 +177,7 @@ def setup_data(df_path, batch_size, random_seed=1, nheads=8):
         batch_size=batch_size,
         collate_fn=DataPadder(
             trg_pad_id=label_vocab.get_stoi()['<pad>'],
-            embedding_len=embedding_len
+            embedding_shape=es
         )
     )
 
@@ -193,11 +187,11 @@ def setup_data(df_path, batch_size, random_seed=1, nheads=8):
         batch_size=batch_size,
         collate_fn=DataPadder(
             trg_pad_id=label_vocab.get_stoi()['<pad>'],
-            embedding_len=embedding_len
+            embedding_shape=es
         )
     )
 
-    return train_dl, validation_dl, test_dl, train_dl_small, label_vocab, embedding_len
+    return train_dl, validation_dl, test_dl, train_dl_small, label_vocab, es
 
 
 if __name__ == '__main__':

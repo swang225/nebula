@@ -1,9 +1,10 @@
 import torch
 import torch.nn as nn
 import os.path as osp
+import os
 import pickle
 
-from nebula.model.ar_net import arNet
+from nebula.model.ar_net_cnn_emb import arNetCNNEMB
 from nebula.common import Counter, read_pickle, write_pickle
 
 import numpy as np
@@ -25,6 +26,7 @@ def train(model, iterator, optimizer, criterion, clip):
     model.train()
 
     epoch_loss = 0
+    epoch_count = 0
 
     counter = Counter(total=len(iterator))
     counter.start()
@@ -34,51 +36,59 @@ def train(model, iterator, optimizer, criterion, clip):
         src_mask = batch[1]
         trg = batch[2]
 
-        optimizer.zero_grad()
+        trg_len = trg.shape[-1]
+        for j in range(1, trg_len):
 
-        # notice how the training is done here
-        # if the label is [1, 2, 3, 4]
-        # we feed [1, 2, 3] into the model
-        # get the prob vector for [2, 3, 4] (each of size 826)
-        # and do cross entropy loss check for [2, 3, 4]
-        output, _ = model(src, src_mask, trg[:, :-1])
+            optimizer.zero_grad()
 
-        # output = [batch size, trg len - 1, output dim]
-        # trg = [batch size, trg len]
+            # notice how the training is done here
+            # if the label is [1, 2, 3, 4]
+            # we feed [1, 2, 3] into the model
+            # get the prob vector for [2, 3, 4] (each of size 826)
+            # and do cross entropy loss check for [2, 3, 4]
+            output, _ = model(src, src_mask, trg[:, :j])
 
-        output_dim = output.shape[-1]
+            # output = [batch size, trg len - 1, output dim]
+            # trg = [batch size, trg len]
 
-        output = output.contiguous().view(-1, output_dim)
-        trg = trg[:, 1:].contiguous().view(-1)
+            output_dim = output.shape[-1]
 
-        # output = [batch size * trg len - 1, output dim]
-        # trg = [batch size * trg len - 1]
+            output = output.contiguous().view(-1, output_dim)
+            trg2 = trg[:, 1:j+1].contiguous().view(-1)
 
-        loss = criterion(output, trg)
+            # output = [batch size * trg len - 1, output dim]
+            # trg = [batch size * trg len - 1]
 
-        loss.backward()
+            loss = criterion(output, trg2)
 
-        torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
+            loss.backward()
 
-        optimizer.step()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
 
-        epoch_loss += loss.item()
+            optimizer.step()
 
-        counter.update()
+            epoch_loss += loss.item()
+            epoch_count += 1
+
+            counter.update()
+            print(f"current loss: {epoch_loss/epoch_count}")
+
+            del output
+            del output_dim
+            del loss
+            del trg2
 
         del src
         del trg
-        del output
-        del output_dim
-        del loss
 
-    return epoch_loss / len(iterator)
+    return epoch_loss / epoch_count
 
 
 def evaluate(model, iterator, criterion):
     model.eval()
 
     epoch_loss = 0
+    epoch_count = 0
 
     counter = Counter(total=len(iterator))
     counter.start()
@@ -90,33 +100,38 @@ def evaluate(model, iterator, criterion):
             trg = batch[2]
 
             trg_len = trg.shape[-1]
+            for j in range(1, trg_len):
 
-            output, _ = model(src, src_mask, trg[:, :-1])
+                output, _ = model(src, src_mask, trg[:, :j])
 
-            # output = [batch size, trg len - 1, output dim]
-            # trg = [batch size, trg len]
+                # output = [batch size, trg len - 1, output dim]
+                # trg = [batch size, trg len]
 
-            output_dim = output.shape[-1]
+                output_dim = output.shape[-1]
 
-            output = output.contiguous().view(-1, output_dim)
-            trg = trg[:, 1:].contiguous().view(-1)
+                output = output.contiguous().view(-1, output_dim)
+                trg2 = trg[:, 1:j+1].contiguous().view(-1)
 
-            # output = [batch size * trg len - 1, output dim]
-            # trg = [batch size * trg len - 1]
+                # output = [batch size * trg len - 1, output dim]
+                # trg = [batch size * trg len - 1]
 
-            loss = criterion(output, trg)
+                loss = criterion(output, trg2)
 
-            epoch_loss += loss.item()
+                epoch_loss += loss.item()
+                epoch_count += 1
 
-            counter.update()
+                counter.update()
+
+                del output
+                del output_dim
+                del loss
+                del trg2
+
 
             del src
             del trg
-            del output
-            del output_dim
-            del loss
 
-    return epoch_loss / len(iterator)
+    return epoch_loss / epoch_count
 
 
 def epoch_time(start_time, end_time):
@@ -217,15 +232,18 @@ if __name__ == '__main__':
     opt = Namespace()
     opt.data_dir = osp.join(root(), "data", "nvbench", "dataset", "dataset_final")
     opt.db_info = osp.join(root(), "data", "nvbench", "dataset", "database_information.csv")
-    opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/ar_fps6_gray_scale2/test_model4"
-    opt.df_path = "C:/Users/aphri/Documents/t0002/pycharm/data/ar_fps6_gray_scale2/df.pkl"
-    opt.epoch = 5
-    opt.learning_rate = 0.0005
-    opt.batch_size = 10
-    opt.max_input_length = 128
+    opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/ar_fps6_gray_scale2/cnn_em_model8_test"
+    opt.df_path = "C:/Users/aphri/Documents/t0002/pycharm/data/ar_fps6_gray_scale2/df_2d.pkl"
+    opt.epoch = 15
+    opt.learning_rate = 0.005
+    opt.batch_size = 128
 
-    model = arNet(
+    if not osp.exists(opt.output_dir):
+        os.makedirs(opt.output_dir)
+
+    model = arNetCNNEMB(
         df_path=opt.df_path,
         batch_size=opt.batch_size
     )
     run_train(model=model, opt=opt, testing=True)
+
