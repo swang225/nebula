@@ -1,6 +1,7 @@
 import torch
 import time
 import pickle
+import matplotlib.pyplot as plt
 
 
 def read_pickle(dir):
@@ -62,3 +63,11 @@ def normalize(text):
 
 def is_matching(label, prediction):
     return normalize(label) == normalize(prediction)
+
+
+def plot_results(res, title):
+    plt.plot([int(i+1) for i in range(res["epoch"])], res["train_loss"], label = "Train Loss")
+    plt.plot([int(i+1) for i in range(res["epoch"])], res["valid_loss"], label = "Validation Loss")
+    plt.title(title)
+    plt.legend()
+    plt.show()
