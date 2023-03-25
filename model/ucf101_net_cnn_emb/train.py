@@ -4,7 +4,7 @@ import os.path as osp
 import os
 import pickle
 
-from nebula.model.ufc101_net_cnn_emb import Ufc101NetCNNEMB
+from nebula.model.ucf101_net_cnn_emb import Ucf101NetCNNEMB
 from nebula.common import Counter, read_pickle, write_pickle
 
 import numpy as np
@@ -256,13 +256,13 @@ if __name__ == '__main__':
     opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/ucf101/model"
     opt.epoch = 16
     opt.learning_rate = 0.005
-    opt.batch_size = 128
+    opt.batch_size = 10
 
     if not osp.exists(opt.output_dir):
         os.makedirs(opt.output_dir)
 
 
-    model = Ufc101NetCNNEMB(
+    model = Ucf101NetCNNEMB(
         batch_size=opt.batch_size
     )
     run_train(model=model, opt=opt, testing=True)

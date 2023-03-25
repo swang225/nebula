@@ -7,12 +7,12 @@ import os.path as osp
 
 from nebula.common import get_device
 from nebula.data.ucf101.setup_data import setup_data
-from nebula.model.ufc101_net_cnn_emb.component.encoder import Encoder
-from nebula.model.ufc101_net_cnn_emb.component.decoder import Decoder
-from nebula.model.ufc101_net_cnn_emb.component.seq2seq import Seq2Seq
+from nebula.model.ucf101_net_cnn_emb.component.encoder import Encoder
+from nebula.model.ucf101_net_cnn_emb.component.decoder import Decoder
+from nebula.model.ucf101_net_cnn_emb.component.seq2seq import Seq2Seq
 
 
-class Ufc101NetCNNEMB:
+class Ucf101NetCNNEMB:
     def __init__(
             self,
             trained_model_path=None,

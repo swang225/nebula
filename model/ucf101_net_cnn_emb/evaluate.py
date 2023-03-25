@@ -1,13 +1,13 @@
-from nebula.model.mnist_net_cnn_emb import mnistNetCNNEMB
+from nebula.model.ucf101_net_cnn_emb import UcfNetCNNEMB
 from nebula.common import beam_search
 from nebula import root
 import os.path as osp
 
 
 trained_model_path = osp.join(
-    root(), "model", "mnist_net_cnn_emb", "saved_models", "model_best.pt"
+    root(), "model", "ucf101_net_cnn_emb", "saved_models", "model_best.pt"
 )
-model = mnistNetCNNEMB(
+model = UcfNetCNNEMB(
     batch_size=1
 )
 model.load_model(trained_model_path=trained_model_path)
