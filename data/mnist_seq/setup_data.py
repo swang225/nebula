@@ -99,10 +99,10 @@ class DataPadder:
         return src_batch, src_mask, lbl_batch
 
 
-def setup_data(batch_size):
+def setup_data(batch_size, location="~/data"):
 
     train_dataset = torchvision.datasets.MNIST(
-        '/files/',
+        location,
         train=True,
         download=True,
         transform=torchvision.transforms.Compose(
@@ -114,7 +114,7 @@ def setup_data(batch_size):
     )
 
     test_dataset = torchvision.datasets.MNIST(
-        '/files/',
+        location,
         train=False,
         download=True,
         transform=torchvision.transforms.Compose(
