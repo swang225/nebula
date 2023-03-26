@@ -26,7 +26,6 @@ class Encoder(nn.Module):
             output_embedding_len=embedding_size
         )
 
-        self.idx_embedding = nn.Embedding(embedding_size, hid_dim)
         self.pos_embedding = nn.Embedding(max_length, hid_dim)
 
         self.layers = nn.ModuleList([EncoderLayer(hid_dim,
@@ -43,14 +42,39 @@ class Encoder(nn.Module):
         self.fc = nn.Linear(embedding_size, hid_dim)
 
     def forward(self, src, src_mask):
+        # [
+        #     [51x51],
+        #     [51x51]
+        #     [51x51]
+        # ]
 
         src = self.conv_layer(src)
+
+        # [
+        #     [embedding_size],
+        #     [embedding_size],
+        #     [embedding_size]
+        # ]
+
         src = self.fc(src)
+
+        # [
+        #     [hidden_dim],
+        #     [hidden_dim],
+        #     [hidden_dim]
+        # ]
 
         batch_size = src.shape[0]
         src_len = src.shape[1]
 
         pos = torch.arange(0, src_len).unsqueeze(0).repeat(batch_size, 1).to(self.device)
+
+
+        # pos = [
+        #     [hidden_dim],
+        #     [hidden_dim],
+        #     [hidden_dim]
+        # ]
 
         # for video frames the src is already in embeddings format
         src = self.dropout(src + self.pos_embedding(pos))

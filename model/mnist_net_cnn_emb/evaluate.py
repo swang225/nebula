@@ -21,7 +21,7 @@ total_count = 0
 for i, batch in enumerate(dl):
     src = batch[0]
     src_mask = batch[1]
-    trg = batch[2]
+    trg = batch[2] # [2, 0-9, 3] # [2, 1,10, 3]
 
     res = beam_search(model.model, src, src_mask, sos_id, eos_id, None)
     cres = trg == res[0]

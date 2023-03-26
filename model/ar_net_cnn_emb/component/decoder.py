@@ -33,6 +33,12 @@ class Decoder(nn.Module):
 
         self.scale = torch.sqrt(torch.FloatTensor([hid_dim])).to(device)
 
+    # enc_src =[
+    #     [hidden_dim],
+    #     [hidden_dim],
+    #     [hidden_dim],
+    # ]
+    # <sos>, <jog>, <eos>
     def forward(self, trg, enc_src, trg_mask, src_mask):
         # trg = [batch size, trg len]
         # enc_src = [batch size, src len, hid dim]

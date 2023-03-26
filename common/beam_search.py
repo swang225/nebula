@@ -36,8 +36,6 @@ def beam_search(
     cur_res = None
     cur_avg_score = None
     for i, v in topk:
-        if i == eos_id and len(predicted[0]) <= 1:
-            continue
 
         new_predicted = torch.tensor([predicted[0].tolist() + [i]])
         new_res, new_avg_score = beam_search(
