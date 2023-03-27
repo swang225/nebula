@@ -152,7 +152,7 @@ def split_files(files, frac=0.8):
 
 def split_file_dict(file_dict, frac=0.8, limit=None, nclasses=None, seed=111):
 
-    nclasses = nclasses if nclasses is not None else len(files_dict)
+    nclasses = nclasses if nclasses is not None else len(file_dict)
     limit = limit if limit is None else int(limit / nclasses)
 
     count = 0
