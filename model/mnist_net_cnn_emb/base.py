@@ -17,6 +17,7 @@ class mnistNetCNNEMB:
             self,
             trained_model_path=None,
             batch_size=128,
+            location="~/data"
     ):
         self.device = get_device()
 
@@ -29,6 +30,7 @@ class mnistNetCNNEMB:
             self.embedding_shape
         ) = setup_data(
             batch_size=batch_size,
+            location=location
         )
 
         OUTPUT_DIM = len(self.label_vocab.vocab)

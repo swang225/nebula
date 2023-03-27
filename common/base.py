@@ -38,7 +38,7 @@ class Counter:
         if self.total is not None:
             log += f", progress: {int(self.count * 100 / self.total)}%"
 
-        print(log )
+        print(log)
 
 
 def sec_to_time(sec):

@@ -36,48 +36,45 @@ def train(model, iterator, optimizer, criterion, clip):
         src_mask = batch[1]
         trg = batch[2]
 
-        trg_len = trg.shape[-1]
-        for j in range(1, trg_len):
+        optimizer.zero_grad()
 
-            optimizer.zero_grad()
+        # notice how the training is done here
+        # if the label is [1, 2, 3, 4]
+        # we feed [1, 2, 3] into the model
+        # get the prob vector for [2, 3, 4] (each of size 826)
+        # and do cross entropy loss check for [2, 3, 4]
+        output, _ = model(src, src_mask, trg[:, :1])
 
-            # notice how the training is done here
-            # if the label is [1, 2, 3, 4]
-            # we feed [1, 2, 3] into the model
-            # get the prob vector for [2, 3, 4] (each of size 826)
-            # and do cross entropy loss check for [2, 3, 4]
-            output, _ = model(src, src_mask, trg[:, :j])
+        # output = [batch size, trg len - 1, output dim]
+        # trg = [batch size, trg len]
 
-            # output = [batch size, trg len - 1, output dim]
-            # trg = [batch size, trg len]
+        output_dim = output.shape[-1]
 
-            output_dim = output.shape[-1]
+        output = output.contiguous().view(-1, output_dim)
+        trg2 = trg[:, 1:2].contiguous().view(-1)
 
-            output = output.contiguous().view(-1, output_dim)
-            trg2 = trg[:, 1:j+1].contiguous().view(-1)
+        # output = [batch size * trg len - 1, output dim]
+        # trg = [batch size * trg len - 1]
 
-            # output = [batch size * trg len - 1, output dim]
-            # trg = [batch size * trg len - 1]
+        loss = criterion(output, trg2)
 
-            loss = criterion(output, trg2)
+        loss.backward()
 
-            loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
 
-            torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
+        optimizer.step()
 
-            optimizer.step()
+        epoch_loss += loss.item()
+        epoch_count += 1
 
-            epoch_loss += loss.item()
-            epoch_count += 1
+        print(f"current loss: {epoch_loss/epoch_count}")
 
-            print(f"current loss: {epoch_loss/epoch_count}")
+        del output
+        del output_dim
+        del loss
+        del trg2
 
-            del output
-            del output_dim
-            del loss
-            del trg2
-
-            counter.update()
+        counter.update()
 
         del src
         del trg
@@ -100,33 +97,30 @@ def evaluate(model, iterator, criterion):
             src_mask = batch[1]
             trg = batch[2]
 
-            trg_len = trg.shape[-1]
-            for j in range(1, trg_len):
+            output, _ = model(src, src_mask, trg[:, :1])
 
-                output, _ = model(src, src_mask, trg[:, :j])
+            # output = [batch size, trg len - 1, output dim]
+            # trg = [batch size, trg len]
 
-                # output = [batch size, trg len - 1, output dim]
-                # trg = [batch size, trg len]
+            output_dim = output.shape[-1]
 
-                output_dim = output.shape[-1]
+            output = output.contiguous().view(-1, output_dim)
+            trg2 = trg[:, 1:2].contiguous().view(-1)
 
-                output = output.contiguous().view(-1, output_dim)
-                trg2 = trg[:, 1:j+1].contiguous().view(-1)
+            # output = [batch size * trg len - 1, output dim]
+            # trg = [batch size * trg len - 1]
 
-                # output = [batch size * trg len - 1, output dim]
-                # trg = [batch size * trg len - 1]
+            loss = criterion(output, trg2)
 
-                loss = criterion(output, trg2)
+            epoch_loss += loss.item()
+            epoch_count += 1
 
-                epoch_loss += loss.item()
-                epoch_count += 1
+            counter.update()
 
-                counter.update()
-
-                del output
-                del output_dim
-                del loss
-                del trg2
+            del output
+            del output_dim
+            del loss
+            del trg2
 
 
             del src
@@ -254,7 +248,7 @@ if __name__ == '__main__':
     opt = Namespace()
     opt.data_dir = osp.join(root(), "data", "nvbench", "dataset", "dataset_final")
     opt.db_info = osp.join(root(), "data", "nvbench", "dataset", "database_information.csv")
-    opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/ucf101/model"
+    opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/ucf101/model_1s"
     opt.epoch = 16
     opt.learning_rate = 0.005
     opt.batch_size = 10

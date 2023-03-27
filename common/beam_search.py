@@ -1,6 +1,31 @@
 import torch
 
 
+def one_step_search(
+        model,
+        src,
+        src_mask,
+        sos_id
+):
+
+    predicted = [[sos_id]]
+    predicted = torch.tensor(predicted)
+
+    model.eval()
+
+    with torch.no_grad():
+        output, _ = model(src, src_mask, predicted)
+
+    topk = torch.topk(output, k=1, dim=2, sorted=True)
+    topkv = topk.values[:, -1, :].tolist()[0]
+    topki = topk.indices[:, -1, :].tolist()[0]
+    topk = zip(topki, topkv)
+
+    predicted = torch.tensor([topki])
+
+    return predicted
+
+
 def beam_search(
         model,
         src,

@@ -1,14 +1,27 @@
-from nebula.common import get_files, read_pickle
+from nebula.common import read_pickle
 from torchtext.vocab import build_vocab_from_iterator
 from torch.utils.data import Dataset, DataLoader
 import os.path as osp
 import numpy as np
 import torch
+import os
+import random
 
 
 def to_actions(f):
     words = f.split("_")
     return [words[1]]
+
+def build_vocab_from_words(words):
+    labels = [[w] for w in words]
+
+    vocab = build_vocab_from_iterator(
+        labels,
+        specials=['<unk>', '<pad>', '<sos>', '<eos>'],
+        min_freq=1
+    )
+
+    return vocab
 
 
 def build_vocab(files):
@@ -31,10 +44,12 @@ class UCF101Dataset(Dataset):
             pickle_dir,
             files,
             label_vocab,
+            max_length,
     ):
         self.pickle_dir = pickle_dir
         self.files = files
         self.label_vocab = label_vocab
+        self.max_length = max_length
 
     @staticmethod
     def string_to_id(label, vocab):
@@ -56,6 +71,7 @@ class UCF101Dataset(Dataset):
     def to_data(self, idx):
         file = self.files[idx]
         frames = np.array(read_pickle(osp.join(self.pickle_dir, file)))
+        frames = frames[:self.max_length]
         label = to_actions(file)[0]
         return frames, label
 
@@ -134,21 +150,82 @@ def split_files(files, frac=0.8):
     return train_files, test_files, valid_files
 
 
+def split_file_dict(file_dict, frac=0.8, limit=None, nclasses=None, seed=111):
+
+    nclasses = nclasses if nclasses is not None else len(files_dict)
+    limit = limit if limit is None else int(limit / nclasses)
+
+    count = 0
+    train_files = []
+    test_files = []
+    valid_files = []
+    classes = []
+    for k, files in file_dict.items():
+        if nclasses is not None and count >= nclasses:
+            break
+
+        if limit is not None:
+            files = files[:limit]
+
+        (
+            cur_train_files,
+            cur_test_files,
+            cur_valid_files
+        ) = split_files(files, frac=frac)
+
+        train_files += cur_train_files
+        test_files += cur_test_files
+        valid_files += cur_valid_files
+        classes.append(k)
+
+        count += 1
+
+    random.seed(seed)
+    random.shuffle(train_files)
+    random.shuffle(test_files)
+    random.shuffle(valid_files)
+
+    return train_files, test_files, valid_files, classes
+
+
+def get_file_dict(dir, format="mp4"):
+    res = {}
+    def add_file(action, file):
+        if action not in res:
+            res[action] = []
+        res[action].append(file)
+
+    for filename in os.listdir(dir):
+        if filename.split(".")[-1] == format:
+
+            action = to_actions(filename)[0]
+            add_file(action, filename)
+
+    return res
+
+
 def setup_data(
         batch_size=10,
         base_dir="C:/Users/aphri/Documents/t0002/pycharm/data/ucf101/pickle_fps6_scale5",
         limit=1000,
+        nclasses=10,
+        max_length=128
 ):
-    files = get_files(dir=base_dir, format="pkl", limit=limit)
+    file_dict = get_file_dict(dir=base_dir, format="pkl")
+    (
+        train_files,
+        test_files,
+        valid_files,
+        classes
+    ) = split_file_dict(file_dict, limit=limit, nclasses=nclasses)
 
-    label_vocab = build_vocab(files)
-
-    train_files, test_files, valid_files = split_files(files)
+    label_vocab = build_vocab_from_words(classes)
 
     train_ds = UCF101Dataset(
         pickle_dir=base_dir,
         files=train_files,
         label_vocab=label_vocab,
+        max_length=max_length
     )
     train_dl = DataLoader(
         train_ds,
@@ -160,6 +237,7 @@ def setup_data(
         pickle_dir=base_dir,
         files=train_files[:100],
         label_vocab=label_vocab,
+        max_length=max_length
     )
     train_dl_small = DataLoader(
         train_ds_small,
@@ -171,6 +249,7 @@ def setup_data(
         pickle_dir=base_dir,
         files=test_files,
         label_vocab=label_vocab,
+        max_length=max_length
     )
     test_dl = DataLoader(
         test_ds,
@@ -182,6 +261,7 @@ def setup_data(
         pickle_dir=base_dir,
         files=valid_files,
         label_vocab=label_vocab,
+        max_length=max_length
     )
     validation_dl = DataLoader(
         validation_ds,

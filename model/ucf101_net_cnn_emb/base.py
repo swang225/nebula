@@ -19,10 +19,13 @@ class Ucf101NetCNNEMB:
             batch_size=128,
             embedding_shape=(120, 160),
             base_dir="C:/Users/aphri/Documents/t0002/pycharm/data/ucf101/pickle_fps6_scale5",
-            limit=1000
+            limit=1000,
+            nclasses=10
     ):
         self.device = get_device()
         self.embedding_shape = embedding_shape
+
+        MAX_LENGTH = 128
 
         (
             self.train_dl,
@@ -34,6 +37,8 @@ class Ucf101NetCNNEMB:
             batch_size=batch_size,
             base_dir=base_dir,
             limit=limit,
+            nclasses=nclasses,
+            max_length=MAX_LENGTH
         )
 
         OUTPUT_DIM = len(self.label_vocab.vocab)
@@ -46,7 +51,6 @@ class Ucf101NetCNNEMB:
         DEC_PF_DIM = 220
         ENC_DROPOUT = 0.1
         DEC_DROPOUT = 0.1
-        MAX_LENGTH = 128
         EMBEDDING_SIZE = 220
 
         enc = Encoder(

@@ -154,8 +154,6 @@ def to_fps_gray_scale(
 def get_files(dir, format="mp4", limit=None):
     res = []
     for filename in os.listdir(dir):
-        if limit is not None and len(res) >= limit:
-            break
         if filename.split(".")[-1] == format:
             res.append(filename)
     return res
