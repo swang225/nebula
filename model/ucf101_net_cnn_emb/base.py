@@ -38,7 +38,8 @@ class Ucf101NetCNNEMB:
             base_dir=base_dir,
             limit=limit,
             nclasses=nclasses,
-            max_length=MAX_LENGTH
+            max_length=MAX_LENGTH,
+            embedding_shape=embedding_shape
         )
 
         OUTPUT_DIM = len(self.label_vocab.vocab)

@@ -223,7 +223,8 @@ def setup_data(
         base_dir="C:/Users/aphri/Documents/t0002/pycharm/data/ucf101/pickle_fps6_scale5",
         limit=1000,
         nclasses=10,
-        max_length=128
+        max_length=128,
+        embedding_shape=(120, 160)
 ):
     file_dict = get_file_dict(dir=base_dir, format="pkl")
     (
@@ -244,7 +245,10 @@ def setup_data(
     train_dl = DataLoader(
         train_ds,
         batch_size=batch_size,
-        collate_fn=DataPadder(trg_pad_id=label_vocab.get_stoi()['<pad>'],)
+        collate_fn=DataPadder(
+            trg_pad_id=label_vocab.get_stoi()['<pad>'],
+            embedding_shape=embedding_shape
+        )
     )
 
     train_ds_small = UCF101Dataset(
@@ -256,7 +260,10 @@ def setup_data(
     train_dl_small = DataLoader(
         train_ds_small,
         batch_size=batch_size,
-        collate_fn=DataPadder(trg_pad_id=label_vocab.get_stoi()['<pad>'],)
+        collate_fn=DataPadder(
+            trg_pad_id=label_vocab.get_stoi()['<pad>'],
+            embedding_shape=embedding_shape
+        )
     )
 
     test_ds = UCF101Dataset(
@@ -268,7 +275,10 @@ def setup_data(
     test_dl = DataLoader(
         test_ds,
         batch_size=batch_size,
-        collate_fn=DataPadder(trg_pad_id=label_vocab.get_stoi()['<pad>'],)
+        collate_fn=DataPadder(
+            trg_pad_id=label_vocab.get_stoi()['<pad>'],
+            embedding_shape=embedding_shape
+        )
     )
 
     validation_ds = UCF101Dataset(
@@ -280,7 +290,10 @@ def setup_data(
     validation_dl = DataLoader(
         validation_ds,
         batch_size=batch_size,
-        collate_fn=DataPadder(trg_pad_id=label_vocab.get_stoi()['<pad>'],)
+        collate_fn=DataPadder(
+            trg_pad_id=label_vocab.get_stoi()['<pad>'],
+            embedding_shape=embedding_shape
+        )
     )
 
     return train_dl, validation_dl, test_dl, train_dl_small, label_vocab
