@@ -90,15 +90,29 @@ class DataPadder:
         self._embedding_shape = embedding_shape
 
     @staticmethod
-    def pad_frame(embedding_shape):
-        return [[0] * embedding_shape[1]] * embedding_shape[0]
+    def pad_frame(embedding_shape, frame):
+        return np.array([[0] * embedding_shape[1]] * embedding_shape[0])
+
+    @staticmethod
+    def comform(data, shape):
+        x, y, z = shape
+        data = data[:x, :y, :z] # remove excess
+
+        dx, dy, dz = [t[0]-t[1] for t in zip(shape, data.shape)]
+        data = np.pad(
+            data,
+            pad_width=((0, dx), (0, dy), (0, dz)),
+            constant_values=0
+        )
+        return data
 
     @staticmethod
     def batch_src(data, embedding_shape):
         data_len_max = max([len(d) for d in data])
 
+        shape = [data_len_max] + list(embedding_shape)
         data_batch = torch.tensor([
-            list(d) + [DataPadder.pad_frame(embedding_shape)] * (data_len_max - len(d))
+            DataPadder.comform(d, shape)
             for d
             in data
         ])
