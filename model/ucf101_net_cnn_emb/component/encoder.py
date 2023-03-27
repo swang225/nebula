@@ -15,7 +15,11 @@ class Encoder(nn.Module):
                  dropout,
                  device,
                  max_length=128,
-                 embedding_size=256
+                 embedding_size=256,
+                 nfilters=5,
+                 nchannels=40,
+                 kernel_size=5,
+                 pool_size=2,
                  ):
         super().__init__()
 
@@ -23,7 +27,11 @@ class Encoder(nn.Module):
 
         self.conv_layer = ConvolutionLayer(
             embedding_shape=embedding_shape,
-            output_embedding_len=embedding_size
+            output_embedding_len=embedding_size,
+            nfilters=nfilters,
+            nchannels=nchannels,
+            kernel_size=kernel_size,
+            pool_size=pool_size,
         )
 
         # self.idx_embedding = nn.Embedding(embedding_size, hid_dim)

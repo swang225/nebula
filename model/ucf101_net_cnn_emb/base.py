@@ -43,8 +43,8 @@ class Ucf101NetCNNEMB:
 
         OUTPUT_DIM = len(self.label_vocab.vocab)
         HID_DIM = 110  # it equals to embedding dimension
-        ENC_LAYERS = 3
-        DEC_LAYERS = 3
+        ENC_LAYERS = 4
+        DEC_LAYERS = 4
         ENC_HEADS = 10
         DEC_HEADS = 10
         ENC_PF_DIM = 220
@@ -52,6 +52,10 @@ class Ucf101NetCNNEMB:
         ENC_DROPOUT = 0.1
         DEC_DROPOUT = 0.1
         EMBEDDING_SIZE = 220
+        NFILTERS = 2
+        NCHANNELS = 20
+        KERNEL_SIZE = 5
+        POOL_SIZE = 2
 
         enc = Encoder(
             embedding_shape=self.embedding_shape,
@@ -62,7 +66,11 @@ class Ucf101NetCNNEMB:
             dropout=ENC_DROPOUT,
             device=self.device,
             max_length=MAX_LENGTH,
-            embedding_size=EMBEDDING_SIZE
+            embedding_size=EMBEDDING_SIZE,
+            nfilters=NFILTERS,
+            nchannels=NCHANNELS,
+            kernel_size=KERNEL_SIZE,
+            pool_size=POOL_SIZE
         )
 
         dec = Decoder(OUTPUT_DIM,

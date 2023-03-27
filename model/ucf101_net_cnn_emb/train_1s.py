@@ -248,7 +248,7 @@ if __name__ == '__main__':
     opt = Namespace()
     opt.data_dir = osp.join(root(), "data", "nvbench", "dataset", "dataset_final")
     opt.db_info = osp.join(root(), "data", "nvbench", "dataset", "database_information.csv")
-    opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/ucf101/model_1s"
+    opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/ucf101/model_1s_2"
     opt.epoch = 16
     opt.learning_rate = 0.005
     opt.batch_size = 10

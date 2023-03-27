@@ -66,6 +66,12 @@ class DataPadder:
     def batch_src(data, embedding_shape):
         data_len_max = max([len(d) for d in data])
 
+        # make 4 duplicate copies of the image, for testing
+        # data_batch = torch.tensor([
+        #     (d.tolist() + [DataPadder.pad_frame(embedding_shape)] * (data_len_max - len(d))) * 4
+        #     for d
+        #     in data
+        # ])
         data_batch = torch.tensor([
             d.tolist() + [DataPadder.pad_frame(embedding_shape)] * (data_len_max - len(d))
             for d
