@@ -42,17 +42,17 @@ class Ucf101NetCNNEMB:
         )
 
         OUTPUT_DIM = len(self.label_vocab.vocab)
-        HID_DIM = 110  # it equals to embedding dimension
+        HID_DIM = 220  # it equals to embedding dimension
         ENC_LAYERS = 4
         DEC_LAYERS = 4
         ENC_HEADS = 10
         DEC_HEADS = 10
-        ENC_PF_DIM = 220
-        DEC_PF_DIM = 220
+        ENC_PF_DIM = 440
+        DEC_PF_DIM = 440
         ENC_DROPOUT = 0.1
         DEC_DROPOUT = 0.1
-        EMBEDDING_SIZE = 220
-        NFILTERS = 2
+        EMBEDDING_SIZE = 440
+        NFILTERS = 1
         NCHANNELS = 20
         KERNEL_SIZE = 5
         POOL_SIZE = 2
