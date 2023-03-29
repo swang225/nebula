@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import os.path as osp
+import os
 import pickle
 
 from nebula.model.nv_bert_cnn import nvBertCNN
@@ -25,6 +26,7 @@ def train(model, iterator, optimizer, criterion, clip):
     model.train()
 
     epoch_loss = 0
+    epoch_count = 0
 
     counter = Counter(total=len(iterator))
     counter.start()
@@ -62,8 +64,10 @@ def train(model, iterator, optimizer, criterion, clip):
         optimizer.step()
 
         epoch_loss += loss.item()
+        epoch_count += 1
 
         counter.update()
+        print(f"current loss: {epoch_loss / epoch_count}")
 
         del src
         del trg
@@ -218,11 +222,11 @@ if __name__ == '__main__':
     opt = Namespace()
     opt.data_dir = osp.join(root(), "data", "nvbench", "dataset", "dataset_final")
     opt.db_info = osp.join(root(), "data", "nvbench", "dataset", "database_information.csv")
-    opt.output_dir = "/home/ubuntu/data/ncnet/output_models_bert_cnn1"
+    opt.output_dir = "/home/ubuntu/data/ncnet/output_models_bert_cnn_test1"
     opt.temp_dataset_path = "/home/ubuntu/data/ncnet/temp_data"
     opt.epoch = 5
     opt.learning_rate = 0.0005
-    opt.batch_size = 64
+    opt.batch_size = 32
     opt.max_input_length = 128
 
     if not osp.exists(opt.output_dir):
@@ -232,4 +236,4 @@ if __name__ == '__main__':
         temp_dataset_path=opt.temp_dataset_path,
         batch_size=opt.batch_size
     )
-    run_train(model=model, opt=opt, testing=False)
+    run_train(model=model, opt=opt, testing=True)

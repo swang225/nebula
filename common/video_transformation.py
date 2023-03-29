@@ -63,6 +63,38 @@ def get_frames(path, fps=None):
     return res
 
 
+def get_loc_frame_from_data(data, loc=0.5):
+    count = data.get(cv2.CAP_PROP_FRAME_COUNT)
+    f_loc = int((count - 1) * loc)
+
+    data.set(cv2.CAP_PROP_POS_FRAMES, f_loc)
+    ret, frame = data.read()
+
+    return frame
+
+
+def get_loc_frame(path, loc=0.5):
+    data = cv2.VideoCapture(path)
+    return get_loc_frame_from_data(data, loc=loc)
+
+
+def get_n_frames(path, n=8):
+    data = cv2.VideoCapture(path)
+    res = [get_loc_frame_from_data(data, loc=i / n) for i in range(n)]
+
+    return res
+
+
+def get_locs_frames(path, locs=[0.1, 0.5, 0.9]):
+    data = cv2.VideoCapture(path)
+    res = [get_loc_frame_from_data(data, loc=loc) for loc in locs]
+    return res
+
+
+def save_frame(path, frame):
+    cv2.imwrite(path, frame)
+
+
 def save_frames(
         frames,
         dir,
@@ -72,9 +104,34 @@ def save_frames(
         cv2.imwrite(str(osp.join(dir, f"{prefix}_{i}.jpg")), frame)
 
 
+def to_gray_one(frame):
+    return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+
 def to_gray(frames):
-    res = [cv2.cvtColor(f, cv2.COLOR_BGR2GRAY) for f in frames]
+    res = [to_gray_one(f) for f in frames]
     return res
+
+
+def crop_one(frame, top, bottom, left, right):
+    return frame[top:-bottom, left:-right]
+
+
+def crop(frames, top, bottom, left, right):
+    res = [crop_one(f, top, bottom, left, right) for f in frames]
+    return res
+
+
+def read_gray_frame(path):
+    return cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+
+
+def to_jpg_name(file):
+    return file.split(".")[0] + ".jpg"
+
+
+def to_pickle_name(file):
+    return file.split(".")[0] + ".pkl"
 
 
 def to_scale(frames, scale=0.5):
@@ -151,12 +208,36 @@ def to_fps_gray_scale(
             prev_progress = cur_progress
 
 
-def get_files(dir, format="mp4", limit=None):
+def get_files(dir, format=None):
     res = []
     for filename in os.listdir(dir):
-        if filename.split(".")[-1] == format:
+        if format is None or filename.split(".")[-1] == format:
             res.append(filename)
     return res
+
+
+def filename_to_labels(filename):
+    words = filename.split("_")
+
+    orientation = words[-1]
+    xangle = words[-2]
+    yangle = words[-3]
+    pants = words[-4]
+    cloth = words[-6]
+    hair = words[-8]
+    action_type = words[-10]
+    label = "_".join(words[:-10])
+
+    return (
+        orientation,
+        xangle,
+        yangle,
+        pants,
+        cloth,
+        hair,
+        action_type,
+        label
+    )
 
 
 def to_actions(f):
@@ -205,6 +286,186 @@ def get_df(
     df = pd.DataFrame(
         data=dict(zip(["embedding", "label", "count"], np.transpose(res)))
     )
+    df.to_pickle(save_path)
+
+    return df
+
+
+def convert_middle_frame(
+        base_dir,
+        save_dir,
+        overwrite=False,
+        crop=dict(top=70, bottom=30, left=50, right=50)
+):
+    if not osp.exists(save_dir):
+        os.makedirs(save_dir)
+
+    files = get_files(base_dir)
+    count = len(files)
+    prev_progress = 0
+    for i, file in enumerate(files):
+        save_file = osp.join(save_dir, to_jpg_name(file))
+        if osp.exists(save_file) and not overwrite:
+            continue
+
+        path = osp.join(base_dir, file)
+        frame = to_gray_one(crop_one(get_loc_frame(path), **crop))
+
+        save_frame(save_file, frame)
+
+        cur_progress = int((i + 1) * 100 / count)
+        if cur_progress >= prev_progress + 2:
+            print(f"progress: {cur_progress}%")
+            prev_progress = cur_progress
+
+
+def df_middle_frame(
+        image_dir,
+        save_path,
+):
+    files = get_files(image_dir)
+    count = len(files)
+    print(count)
+    prev_progress = 0
+    res = []
+    for i, f in enumerate(files):
+        frame = read_gray_frame(osp.join(image_dir, f))
+        (
+            orientation,
+            xangle,
+            yangle,
+            pants,
+            cloth,
+            hair,
+            action_type,
+            label
+        ) = filename_to_labels(f)
+
+        res.append(
+            (
+                frame,
+                orientation,
+                xangle,
+                yangle,
+                pants,
+                cloth,
+                hair,
+                action_type,
+                label
+            )
+        )
+
+        cur_progress = int((i + 1) * 100 / count)
+        if cur_progress >= prev_progress + 2:
+            print(f"progress: {cur_progress}%")
+            prev_progress = cur_progress
+
+    df = pd.DataFrame(data=dict(zip(
+        [
+            "image",
+            "orientation",
+            "xangle",
+            "yangle",
+            "pants",
+            "cloth",
+            "hair",
+            "action_type",
+            "label"
+        ],
+        np.transpose(res)
+    )))
+
+    df.to_pickle(save_path)
+
+    return df
+
+
+def convert_locs_frames(
+        base_dir,
+        save_dir,
+        overwrite=False,
+        crop=dict(top=70, bottom=30, left=50, right=50),
+        locs=[0.15, 0.5, 0.85]
+):
+    if not osp.exists(save_dir):
+        os.makedirs(save_dir)
+
+    files = get_files(base_dir)
+    count = len(files)
+    prev_progress = 0
+    for i, file in enumerate(files):
+        save_file = osp.join(save_dir, to_pickle_name(file))
+        if osp.exists(save_file) and not overwrite:
+            continue
+
+        path = osp.join(base_dir, file)
+        frames = get_locs_frames(path, locs=locs)
+        frames = [to_gray_one(crop_one(f, **crop)) for f in frames]
+
+        write_pickle(save_file, frames)
+
+        cur_progress = int((i + 1) * 100 / count)
+        if cur_progress >= prev_progress + 2:
+            print(f"progress: {cur_progress}%")
+            prev_progress = cur_progress
+
+
+def df_locs_frames(
+        pickle_dir,
+        save_path,
+):
+    files = get_files(pickle_dir)
+    count = len(files)
+    print(count)
+    prev_progress = 0
+    res = []
+    for i, f in enumerate(files):
+        frames = read_pickle(osp.join(pickle_dir, f))
+        (
+            orientation,
+            xangle,
+            yangle,
+            pants,
+            cloth,
+            hair,
+            action_type,
+            label
+        ) = filename_to_labels(f)
+
+        res.append(
+            (
+                frames,
+                orientation,
+                xangle,
+                yangle,
+                pants,
+                cloth,
+                hair,
+                action_type,
+                label
+            )
+        )
+
+        cur_progress = int((i + 1) * 100 / count)
+        if cur_progress >= prev_progress + 2:
+            print(f"progress: {cur_progress}%")
+            prev_progress = cur_progress
+
+    df = pd.DataFrame(data=dict(zip(
+        [
+            "images",
+            "orientation",
+            "xangle",
+            "yangle",
+            "pants",
+            "cloth",
+            "hair",
+            "action_type",
+            "label"
+        ],
+        np.transpose(res)
+    )))
+
     df.to_pickle(save_path)
 
     return df
