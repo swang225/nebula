@@ -232,10 +232,10 @@ if __name__ == '__main__':
     opt = Namespace()
     opt.data_dir = osp.join(root(), "data", "nvbench", "dataset", "dataset_final")
     opt.db_info = osp.join(root(), "data", "nvbench", "dataset", "database_information.csv")
-    opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/ar_fps6_gray_scale2/cnn_em_model8_test"
+    opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/ar_fps6_gray_scale2/cnn_em_model1"
     opt.df_path = "C:/Users/aphri/Documents/t0002/pycharm/data/ar_fps6_gray_scale2/df_2d.pkl"
     opt.epoch = 15
-    opt.learning_rate = 0.005
+    opt.learning_rate = 0.01
     opt.batch_size = 128
 
     if not osp.exists(opt.output_dir):
@@ -245,5 +245,5 @@ if __name__ == '__main__':
         df_path=opt.df_path,
         batch_size=opt.batch_size
     )
-    run_train(model=model, opt=opt, testing=True)
+    run_train(model=model, opt=opt, testing=False)
 

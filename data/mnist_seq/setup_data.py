@@ -105,7 +105,7 @@ class DataPadder:
         return src_batch, src_mask, lbl_batch
 
 
-def setup_data(batch_size, location="~/data"):
+def setup_data(batch_size, location="/files"):
 
     train_dataset = torchvision.datasets.MNIST(
         location,

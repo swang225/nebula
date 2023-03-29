@@ -4,6 +4,7 @@ import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from torchtext.vocab import build_vocab_from_iterator
+import torchvision.transforms as transforms
 
 
 def split_df(df, r1=0.8, r2=0.5, seed=123):
@@ -68,6 +69,13 @@ class ArAnimDataset(Dataset):
 
         self.label_vocab = label_vocab
 
+        self.transform = transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.Normalize((0.6833,), (0.2241,))  # mean and standard deviation from first image
+            ]
+        )
+
     def string_to_ids(self, input, vocab):
 
         stoi = vocab.get_stoi()
@@ -83,7 +91,7 @@ class ArAnimDataset(Dataset):
 
         cur_data = self.data.loc[idx]
 
-        src = list(np.array(cur_data["source"]) / 255)
+        src = torch.tensor([self.transform(i).tolist()[0] for i in cur_data["source"]])
 
         lbl = self.string_to_ids(cur_data["label"], self.label_vocab)
 
@@ -104,7 +112,7 @@ class DataPadder:
         data_len_max = max([len(d) for d in data])
 
         data_batch = torch.tensor([
-            d + [DataPadder.pad_frame(embedding_shape)] * (data_len_max - len(d))
+            d.tolist() + [DataPadder.pad_frame(embedding_shape)] * (data_len_max - len(d))
             for d
             in data
         ])
@@ -195,9 +203,12 @@ def setup_data(df_path, batch_size, random_seed=1):
 
 
 if __name__ == '__main__':
-    df_path = "C:/Users/aphri/Documents/t0002/pycharm/data/ar_fps2_gray_scale3/df.pkl"
+    df_path = "C:/Users/aphri/Documents/t0002/pycharm/data/ar_fps6_gray_scale2/df_2d.pkl"
     batch_size = 10
 
     train_dl, validation_dl, test_dl, train_dl_small, label_vocab, embedding_len = setup_data(df_path, batch_size)
 
-    print(label_vocab)
+    for d in train_dl_small:
+        print(d)
+
+    print(label_vocab.get_stoi())
