@@ -16,7 +16,6 @@ class ygarNetCNNEMBF3:
     def __init__(
             self,
             df_path,
-            trained_model_path=None,
             batch_size=128,
     ):
         self.device = get_device()

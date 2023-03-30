@@ -7,7 +7,33 @@ import pickle
 import pandas as pd
 from skimage.morphology import skeletonize
 from skimage.util import invert
-import matplotlib.pyplot as plt
+from ipywidgets import Video, Image
+
+
+def play_video(path, play=True, width=400, height=400):
+    res = Video.from_file(path, play=play, width=width, height=height)
+    return res
+
+
+def display_list_color(frames, nr, nc, fs=2):
+    # display results
+    fig, ax = plt.subplots(nrows=nr, ncols=nc, figsize=(fs * nc, fs * nr))
+
+    count = len(frames)
+    k = 0
+    for i in range(nr):
+        for j in range(nc):
+            if count > k:
+                ax[i][j].imshow(frames[k][..., ::-1])
+                k += 1
+            ax[i][j].axis('off')
+
+    fig.tight_layout(pad=0.2)
+    plt.show()
+
+
+def display_color(frame):
+    plt.imshow(frame[..., ::-1])
 
 
 def display(frame):
