@@ -130,48 +130,47 @@ def conform_embedding(df, nheads):
     return df, new_embedding_len
 
 
-def read_data(df_path, random_seed):
 
+def setup_data(df_path, batch_size, random_seed=1):
     df = pd.read_pickle(df_path)
-
-    df["label_t"] = df["label"] + "_" + df["action_type"].astype(str)
-    df["label_th"] = df["label_t"] + "_" + df["hair"].astype(str)
-    df["label_thc"] = df["label_th"] + "_" + df["cloth"].astype(str)
-    df["label_thcp"] = df["label_thc"] + "_" + df["pants"].astype(str)
-
-    train_df, test_df, valid_df = split_ar_anim_df(df, random_seed)
-    train_df = train_df.sample(frac=1, random_state=random_seed)  # randomize train_df
-    return df, train_df, test_df, valid_df
-
-
-def setup_data(df_path, batch_size, random_seed=1, label="label"):
-    df, train_df, test_df, valid_df = read_data(df_path=df_path, random_seed=random_seed)
     embedding_shape = df["image"][0].shape
 
-    label_vocab = build_vocab(df[label])
+    df["label_type"] = (
+            df["label"] + "_" +
+            df["action_type"].astype(str) + "_" +
+            df["hair"].astype(str) + "_" +
+            df["cloth"].astype(str) + "_" +
+            df["pants"].astype(str)
+    )
+    # TODO change to 4 different ones
 
-    train_ds = ygarAnimDataset(train_df[["image", label]], label_vocab=label_vocab)
+    train_df, test_df, valid_df = split_ar_anim_df(df, random_seed)
+    train_df = train_df.sample(frac=1, random_state=random_seed) # randomize train_df
+
+    label_vocab = build_vocab(df["label_type"])
+
+    train_ds = ygarAnimDataset(train_df[["image", "label_type"]], label_vocab=label_vocab)
     train_dl = DataLoader(
             train_ds,
             batch_size=batch_size,
             collate_fn=DataPadder()
         )
 
-    train_ds_small = ygarAnimDataset(train_df[["image", label]].head(100), label_vocab=label_vocab)
+    train_ds_small = ygarAnimDataset(train_df[["image", "label_type"]].head(100), label_vocab=label_vocab)
     train_dl_small = DataLoader(
         train_ds_small,
         batch_size=batch_size,
         collate_fn=DataPadder()
     )
 
-    test_ds = ygarAnimDataset(test_df[["image", label]], label_vocab=label_vocab)
+    test_ds = ygarAnimDataset(test_df[["image", "label_type"]], label_vocab=label_vocab)
     test_dl = DataLoader(
         test_ds,
         batch_size=batch_size,
         collate_fn=DataPadder()
     )
 
-    validation_ds = ygarAnimDataset(valid_df[["image", label]], label_vocab=label_vocab)
+    validation_ds = ygarAnimDataset(valid_df[["image", "label_type"]], label_vocab=label_vocab)
     validation_dl = DataLoader(
         validation_ds,
         batch_size=batch_size,
@@ -185,17 +184,10 @@ if __name__ == '__main__':
     df_path = "C:/Users/aphri/Documents/t0002/pycharm/data/yg_ar/image_df.pkl"
     batch_size = 10
 
-    (
-        train_dl,
-        validation_dl,
-        test_dl,
-        train_dl_small,
-        label_vocab,
-        embedding_shape
-    ) = setup_data(df_path, batch_size, label="label_th")
+    train_dl, validation_dl, test_dl, train_dl_small, label_vocab, embedding_shape = setup_data(df_path, batch_size)
 
-    # for d in train_dl_small:
-    #     print(d)
+    for d in train_dl_small:
+        print(d)
 
     print(label_vocab.get_stoi())
     print(len(train_dl))

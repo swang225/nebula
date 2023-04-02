@@ -6,18 +6,17 @@ import os
 import os.path as osp
 
 from nebula.common import get_device
-from nebula.data.yg_ar.setup_data_image import setup_data
-from nebula.model.yg_ar_net_cnn_emb.component.encoder import Encoder
-from nebula.model.yg_ar_net_cnn_emb.component.decoder import Decoder
-from nebula.model.yg_ar_net_cnn_emb.component.seq2seq import Seq2Seq
+from nebula.data.yg_ar.setup_data_image_detailed import setup_data
+from nebula.model.yg_ar_net_cnn_emb_detailed.component.encoder import Encoder
+from nebula.model.yg_ar_net_cnn_emb_detailed.component.decoder import Decoder
+from nebula.model.yg_ar_net_cnn_emb_detailed.component.seq2seq import Seq2Seq
 
 
-class ygarNetCNNEMB:
+class ygarNetCNNEMB_Detailed:
     def __init__(
             self,
             df_path,
             batch_size=128,
-            label="label",
     ):
         self.device = get_device()
 
@@ -31,12 +30,11 @@ class ygarNetCNNEMB:
         ) = setup_data(
             df_path=df_path,
             batch_size=batch_size,
-            label=label,
         )
 
         OUTPUT_DIM = len(self.label_vocab.vocab)
-        HID_DIM = 28 # it equals to embedding dimension
-        EMBEDDING_SIZE = 56
+        HID_DIM = 56 # it equals to embedding dimension
+        EMBEDDING_SIZE = 112
         ENC_LAYERS = 3
         DEC_LAYERS = 3
         ENC_HEADS = 4
@@ -56,7 +54,9 @@ class ygarNetCNNEMB:
             dropout=ENC_DROPOUT,
             device=self.device,
             max_length=MAX_LENGTH,
-            embedding_size=EMBEDDING_SIZE
+            embedding_size=EMBEDDING_SIZE,
+            kernel_size=3,
+            nchannels=30
         )
 
         dec = Decoder(OUTPUT_DIM,

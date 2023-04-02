@@ -4,7 +4,7 @@ import os.path as osp
 import os
 import pickle
 
-from nebula.model.yg_ar_net_cnn_emb_f3 import ygarNetCNNEMBF3
+from nebula.model.yg_ar_net_cnn_emb_detailed import ygarNetCNNEMB_Detailed
 from nebula.common import Counter, read_pickle, write_pickle
 
 import numpy as np
@@ -224,8 +224,8 @@ if __name__ == '__main__':
     from nebula import root
 
     opt = Namespace()
-    opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/yg_ar/f3_model0001"
-    opt.df_path = "C:/Users/aphri/Documents/t0002/pycharm/data/yg_ar/f3_df.pkl"
+    opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/yg_ar/image_detailed_model0002"
+    opt.df_path = "C:/Users/aphri/Documents/t0002/pycharm/data/yg_ar/image_df.pkl"
     opt.epoch = 15
     opt.learning_rate = 0.01
     opt.batch_size = 128
@@ -233,7 +233,7 @@ if __name__ == '__main__':
     if not osp.exists(opt.output_dir):
         os.makedirs(opt.output_dir)
 
-    model = ygarNetCNNEMBF3(
+    model = ygarNetCNNEMB_Detailed(
         df_path=opt.df_path,
         batch_size=opt.batch_size
     )

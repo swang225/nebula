@@ -224,9 +224,8 @@ if __name__ == '__main__':
     from nebula import root
 
     opt = Namespace()
-    opt.data_dir = osp.join(root(), "data", "nvbench", "dataset", "dataset_final")
-    opt.db_info = osp.join(root(), "data", "nvbench", "dataset", "database_information.csv")
-    opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/yg_ar/image_model0001"
+    opt.label = "label_t"
+    opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/yg_ar/image_t_model0001"
     opt.df_path = "C:/Users/aphri/Documents/t0002/pycharm/data/yg_ar/image_df.pkl"
     opt.epoch = 15
     opt.learning_rate = 0.01
@@ -237,7 +236,8 @@ if __name__ == '__main__':
 
     model = ygarNetCNNEMB(
         df_path=opt.df_path,
-        batch_size=opt.batch_size
+        batch_size=opt.batch_size,
+        label=opt.label
     )
     run_train(model=model, opt=opt, testing=False)
 

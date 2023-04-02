@@ -160,14 +160,19 @@ def to_pickle_name(file):
     return file.split(".")[0] + ".pkl"
 
 
+def to_scale_one(frame, scale=0.5):
+    width = int(frame.shape[1] * scale)
+    height = int(frame.shape[0] * scale)
+    dim = (width, height)
+    resized = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
+
+    return resized
+
+
 def to_scale(frames, scale=0.5):
     res = []
     for f in frames:
-        width = int(f.shape[1] * scale)
-        height = int(f.shape[0] * scale)
-        dim = (width, height)
-        resized = cv2.resize(f, dim, interpolation=cv2.INTER_AREA)
-        res.append(resized)
+        res.append(to_scale_one(f, scale=scale))
 
     return res
 
