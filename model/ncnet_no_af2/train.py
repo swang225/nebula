@@ -1,9 +1,10 @@
 import torch
 import torch.nn as nn
+import os
 import os.path as osp
 import pickle
 
-from nebula.model.ncnet_no_af import ncNetNoAF
+from nebula.model.ncnet_no_af2 import ncNetNoAF2
 from nebula.common import Counter
 
 import numpy as np
@@ -25,10 +26,11 @@ def train(model, iterator, optimizer, criterion, clip, vocab):
     model.train()
 
     epoch_loss = 0
+    epoch_count = 0
 
     counter = Counter(total=len(iterator))
     counter.start()
-
+    print("- start training")
     for i, batch in enumerate(iterator):
         src = batch[0]
         trg = batch[1]
@@ -58,9 +60,18 @@ def train(model, iterator, optimizer, criterion, clip, vocab):
         optimizer.step()
 
         epoch_loss += loss.item()
+        epoch_count += 1
 
         counter.update()
+        print(f"current loss: {epoch_loss / epoch_count}")
 
+        del src
+        del trg
+        del output
+        del output_dim
+        del loss
+
+    print("- end training")
     return epoch_loss / len(iterator)
 
 
@@ -113,7 +124,7 @@ def run_train(
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
 
-    m1 = ncNetNoAF(batch_size=opt.batch_size)
+    m1 = ncNetNoAF2(batch_size=opt.batch_size)
 
     print("initialize weights")
     m1.ncNet.apply(initialize_weights)
@@ -184,13 +195,12 @@ if __name__ == '__main__':
     opt = Namespace()
     opt.data_dir = osp.join(root(), "data", "nvbench", "dataset", "dataset_final")
     opt.db_info = osp.join(root(), "data", "nvbench", "dataset", "database_information.csv")
-    opt.output_dir = "/home/ubuntu/data/ncnet/output_models_ncnet_no_af_test"
+    opt.output_dir = "/home/ubuntu/data/ncnet/output_models_ncnet_no_af2_3"
     opt.epoch = 5
     opt.learning_rate = 0.0005
     opt.batch_size = 128
     opt.max_input_length = 128
 
-    import os
     if not osp.exists(opt.output_dir):
         os.makedirs(opt.output_dir)
 

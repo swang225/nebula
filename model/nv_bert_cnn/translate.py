@@ -73,3 +73,16 @@ def fix_chart_template(chart_template=None):
         return query_template
     else:
         return query_template
+
+
+def get_all_table_columns(data_file):
+    with open(data_file, 'r') as fp:
+        data = json.load(fp)
+    '''
+    return:
+    {'chinook_1': {'Album': ['AlbumId', 'Title', 'ArtistId'],
+      'Artist': ['ArtistId', 'Name'],
+      'Customer': ['CustomerId',
+       'FirstName',
+    '''
+    return data

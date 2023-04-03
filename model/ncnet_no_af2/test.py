@@ -2,11 +2,11 @@ import torch
 
 
 from nebula.common import Counter, is_matching
-from nebula.model.ncnet.translate import (
+from nebula.model.ncnet_no_af2.translate import (
     postprocessing,
     get_all_table_columns
 )
-from nebula.model.ncnet import ncNet
+from nebula.model.ncnet_no_af2 import ncNetNoAF2
 from nebula import root
 
 import random
@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     opt = Namespace()
     base_dir = root()
-    opt.model = osp.join(root(), "model/ncnet/result/model_best.pt")
+    opt.model = osp.join(root(), "model/ncnet_no_af2/result/model_best.pt")
     opt.data_dir = osp.join(root(), "data/nvbench/dataset/dataset_final")
     opt.db_info = osp.join(root(), "data/nvbench/dataset/database_information.csv")
     opt.test_data = osp.join(root(), "data/nvbench/dataset/dataset_final/test.csv")
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     torch.cuda.manual_seed(SEED)
     torch.backends.cudnn.deterministic = True
 
-    m1 = ncNet(
+    m1 = ncNetNoAF2(
         trained_model_path=opt.model,
     )
 
@@ -103,6 +103,6 @@ if __name__ == "__main__":
         #     break
 
     print("--")
-    print('ncNet w/o chart template:', only_nl_match / only_nl_cnt)
-    print('ncNet with chart template:', nl_template_match / nl_template_cnt)
-    print('ncNet overall:', (only_nl_match + nl_template_match) / (only_nl_cnt + nl_template_cnt))
+    print('ncNet no af2 w/o chart template:', only_nl_match / only_nl_cnt)
+    print('ncNet no af2 with chart template:', nl_template_match / nl_template_cnt)
+    print('ncNet no af2 overall:', (only_nl_match + nl_template_match) / (only_nl_cnt + nl_template_cnt))

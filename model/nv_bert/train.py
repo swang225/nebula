@@ -218,15 +218,18 @@ if __name__ == '__main__':
     opt = Namespace()
     opt.data_dir = osp.join(root(), "data", "nvbench", "dataset", "dataset_final")
     opt.db_info = osp.join(root(), "data", "nvbench", "dataset", "database_information.csv")
-    opt.output_dir = "/home/ubuntu/data/ncnet/output_models_bert"
-    opt.temp_dataset_path = "/home/ubuntu/data/ncnet/temp_data"
-    opt.epoch = 5
+    opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/ncnet/output_models_bert"
+    opt.temp_dataset_path = "C:/Users/aphri/Documents/t0002/pycharm/data/ncnet/temp_data"
+    opt.epoch = 50
     opt.learning_rate = 0.0005
     opt.batch_size = 64
-    opt.max_input_length = 128
+    opt.max_input_length = 10
 
     model = nvBert(
         temp_dataset_path=opt.temp_dataset_path,
         batch_size=opt.batch_size
     )
+    # # load the current best model
+    from nebula import root
+    model.load_model(osp.join(root(), "model", "nv_bert", "result", "model_best.pt"))
     run_train(model=model, opt=opt, testing=False)

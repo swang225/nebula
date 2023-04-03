@@ -1,10 +1,11 @@
 import torch
 import torch.nn as nn
+import os
 import os.path as osp
 import pickle
 
-from nebula.model.ncnet_no_af import ncNetNoAF
-from nebula.common import Counter
+from nebula.model.nv_bert2 import nvBert2
+from nebula.common import Counter, read_pickle, write_pickle
 
 import numpy as np
 import random
@@ -21,14 +22,14 @@ def initialize_weights(m):
         nn.init.xavier_uniform_(m.weight.data)
 
 
-def train(model, iterator, optimizer, criterion, clip, vocab):
+def train(model, iterator, optimizer, criterion, clip):
     model.train()
 
     epoch_loss = 0
 
     counter = Counter(total=len(iterator))
     counter.start()
-
+    print("- start training")
     for i, batch in enumerate(iterator):
         src = batch[0]
         trg = batch[1]
@@ -36,7 +37,12 @@ def train(model, iterator, optimizer, criterion, clip, vocab):
 
         optimizer.zero_grad()
 
-        output, _ = model(src, trg[:, :-1], tok_types, vocab)
+        # notice how the training is done here
+        # if the label is [1, 2, 3, 4]
+        # we feed [1, 2, 3] into the model
+        # get the prob vector for [2, 3, 4] (each of size 826)
+        # and do cross entropy loss check for [2, 3, 4]
+        output, _ = model(src, trg[:, :-1], tok_types)
 
         # output = [batch size, trg len - 1, output dim]
         # trg = [batch size, trg len]
@@ -61,21 +67,34 @@ def train(model, iterator, optimizer, criterion, clip, vocab):
 
         counter.update()
 
+        del src
+        del trg
+        del output
+        del output_dim
+        del loss
+
+    print("- end training")
     return epoch_loss / len(iterator)
 
 
-def evaluate(model, iterator, criterion, vocab):
+def evaluate(model, iterator, criterion):
     model.eval()
 
     epoch_loss = 0
 
+    counter = Counter(total=len(iterator))
+    counter.start()
+
+    print("- start evaluating")
     with torch.no_grad():
         for i, batch in enumerate(iterator):
             src = batch[0]
             trg = batch[1]
             tok_types = batch[2]
 
-            output, _ = model(src, trg[:, :-1], tok_types, vocab)
+            trg_len = trg.shape[-1]
+
+            output, _ = model(src, trg[:, :-1], tok_types)
 
             # output = [batch size, trg len - 1, output dim]
             # trg = [batch size, trg len]
@@ -92,6 +111,15 @@ def evaluate(model, iterator, criterion, vocab):
 
             epoch_loss += loss.item()
 
+            counter.update()
+
+            del src
+            del trg
+            del output
+            del output_dim
+            del loss
+
+    print("- end evaluating")
     return epoch_loss / len(iterator)
 
 
@@ -103,6 +131,7 @@ def epoch_time(start_time, end_time):
 
 
 def run_train(
+        model,
         opt,
         seed=1234,
         testing=False,
@@ -113,14 +142,12 @@ def run_train(
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
 
-    m1 = ncNetNoAF(batch_size=opt.batch_size)
-
     print("initialize weights")
-    m1.ncNet.apply(initialize_weights)
+    model.model.apply(initialize_weights)
 
     LEARNING_RATE = opt.learning_rate
-    optimizer = torch.optim.Adam(m1.ncNet.parameters(), lr=LEARNING_RATE)
-    criterion = nn.CrossEntropyLoss(ignore_index=m1.TRG_PAD_IDX)
+    optimizer = torch.optim.Adam(model.model.parameters(), lr=LEARNING_RATE)
+    criterion = nn.CrossEntropyLoss(ignore_index=model.TRG_PAD_IDX)
 
     N_EPOCHS = opt.epoch
     CLIP = 1
@@ -128,17 +155,29 @@ def run_train(
     train_loss_list, valid_loss_list = list(), list()
     best_valid_loss = float('inf')
 
-    train_iterator = m1.train_iterator if not testing else m1.train_iterator_small
+    train_dl = model.train_dl if not testing else model.train_dl_small
 
     print("start training")
     for epoch in range(N_EPOCHS):
 
         print(f"epoch: {epoch}")
 
+        epoch_model_path = osp.join(opt.output_dir, 'model_' + str(epoch + 1) + '.pt')
+        res_path = osp.join(opt.output_dir, 'train_results.pkl')
+        if osp.exists(epoch_model_path):
+            print(f"model already exist")
+            model.load_model(epoch_model_path)
+
+            res = read_pickle(res_path)
+            train_loss_list = res["train_loss"]
+            valid_loss_list = res["valid_loss"]
+
+            continue
+
         start_time = time.time()
 
-        train_loss = train(m1.ncNet, train_iterator, optimizer, criterion, CLIP, m1.SRC)
-        valid_loss = evaluate(m1.ncNet, m1.valid_iterator, criterion, m1.SRC)
+        train_loss = train(model.model, train_dl, optimizer, criterion, CLIP)
+        valid_loss = evaluate(model.model, model.validation_dl, criterion)
 
         end_time = time.time()
 
@@ -149,15 +188,15 @@ def run_train(
             print(f"saving best models with validation loss: {valid_loss}")
             best_valid_loss = valid_loss
             torch.save(
-                m1.ncNet.state_dict(),
+                model.model.state_dict(),
                 str(osp.join(opt.output_dir, 'model_best.pt'))
             )
 
         # save model on each epoch
         print(f"saving mode for epoch: {epoch + 1}")
         torch.save(
-            m1.ncNet.state_dict(),
-            str(osp.join(opt.output_dir, 'model_' + str(epoch + 1) + '.pt'))
+            model.model.state_dict(),
+            epoch_model_path
         )
 
         train_loss_list.append(train_loss)
@@ -172,9 +211,7 @@ def run_train(
             "train_loss": train_loss_list,
             "valid_loss": valid_loss_list,
         }
-
-        with open(str(osp.join(opt.output_dir, 'train_results.pkl')), 'wb') as handle:
-            pickle.dump(res, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        write_pickle(res_path, res)
 
 
 if __name__ == '__main__':
@@ -184,14 +221,21 @@ if __name__ == '__main__':
     opt = Namespace()
     opt.data_dir = osp.join(root(), "data", "nvbench", "dataset", "dataset_final")
     opt.db_info = osp.join(root(), "data", "nvbench", "dataset", "database_information.csv")
-    opt.output_dir = "/home/ubuntu/data/ncnet/output_models_ncnet_no_af_test"
-    opt.epoch = 5
+    opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/ncnet/output_models_bert2"
+    opt.temp_dataset_path = "C:/Users/aphri/Documents/t0002/pycharm/data/ncnet/temp_data"
+    opt.epoch = 50
     opt.learning_rate = 0.0005
-    opt.batch_size = 128
-    opt.max_input_length = 128
+    opt.batch_size = 64
+    opt.max_input_length = 10
 
-    import os
     if not osp.exists(opt.output_dir):
         os.makedirs(opt.output_dir)
 
-    run_train(opt=opt, testing=False)
+    model = nvBert2(
+        temp_dataset_path=opt.temp_dataset_path,
+        batch_size=opt.batch_size
+    )
+    # # load the current best model
+    # from nebula import root
+    # model.load_model(osp.join(root(), "model", "nv_bert2", "result", "model_best.pt"))
+    run_train(model=model, opt=opt, testing=False)

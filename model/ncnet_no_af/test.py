@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     opt = Namespace()
     base_dir = root()
-    opt.model = osp.join(root(), "model/ncnet/saved_models/trained_model.pt")
+    opt.model = osp.join(root(), "model/ncnet_no_af/result/model_best.pt")
     opt.data_dir = osp.join(root(), "data/nvbench/dataset/dataset_final")
     opt.db_info = osp.join(root(), "data/nvbench/dataset/database_information.csv")
     opt.test_data = osp.join(root(), "data/nvbench/dataset/dataset_final/test.csv")
@@ -103,6 +103,6 @@ if __name__ == "__main__":
         #     break
 
     print("--")
-    print('ncNet w/o chart template:', only_nl_match / only_nl_cnt)
-    print('ncNet with chart template:', nl_template_match / nl_template_cnt)
-    print('ncNet overall:', (only_nl_match + nl_template_match) / (only_nl_cnt + nl_template_cnt))
+    print('ncNet no af w/o chart template:', only_nl_match / only_nl_cnt)
+    print('ncNet no af with chart template:', nl_template_match / nl_template_cnt)
+    print('ncNet no af overall:', (only_nl_match + nl_template_match) / (only_nl_cnt + nl_template_cnt))

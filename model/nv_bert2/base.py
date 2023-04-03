@@ -1,7 +1,17 @@
-import re
-import json
-
+import pandas as pd
 import torch
+import sqlite3
+import re
+import os
+import os.path as osp
+
+from nebula.common import get_device
+from nebula.data.nvbench.process_dataset import ProcessData4Training
+from nebula.data.nvbench.setup_data_bert2 import get_bert_tokenizer, setup_data
+from nebula.model.nv_bert2.component.bert_encoder import BertEncoder
+from nebula.model.nv_bert2.component.decoder import Decoder
+from nebula.model.nv_bert2.component.seq2seq import Seq2Seq
+from nebula.model.nv_bert2.translate import get_token_types, fix_chart_template, postprocessing
 
 
 def get_candidate_columns(src):
@@ -12,19 +22,6 @@ def get_candidate_columns(src):
 def get_template(src):
     col_list = re.findall('<c>.*</c>', src)[0].lower().split(' ')
     return col_list[1:-1] # remove <template> </template>
-
-
-def get_all_table_columns(data_file):
-    with open(data_file, 'r') as fp:
-        data = json.load(fp)
-    '''
-    return:
-    {'chinook_1': {'Album': ['AlbumId', 'Title', 'ArtistId'],
-      'Artist': ['ArtistId', 'Name'],
-      'Customer': ['CustomerId',
-       'FirstName',
-    '''
-    return data
 
 
 def get_chart_type(pred_tokens_list):
@@ -257,110 +254,46 @@ def guide_decoder_by_candidates(
     return best_id, best_token
 
 
-def translate_sentence(sentence, src_field, trg_field, TOK_TYPES, tok_types, model, device, max_len=128):
+def translate(
+        input_src,
+        token_types,
+        model,
+        label_vocab,
+        types_vocab,
+        device,
+        db_id,
+        table_id,
+        db_tables_columns,
+        db_tables_columns_types,
+        max_len=128
+):
     model.eval()
 
-    # process the tok_type
-    if isinstance(tok_types, str):
-        tok_types_ids = tok_types.lower().split(' ')
-    else:
-        tok_types_ids = [tok_type.lower() for tok_type in tok_types]
-    tok_types_ids = [TOK_TYPES.init_token] + tok_types_ids + [TOK_TYPES.eos_token]
-    tok_types_ids_indexes = [TOK_TYPES.vocab.stoi[tok_types_id] for tok_types_id in tok_types_ids]
-    tok_types_tensor = torch.LongTensor(tok_types_ids_indexes).unsqueeze(0).to(device)
+    tokenizer = get_bert_tokenizer()
 
-    if isinstance(sentence, str):
-        tokens = sentence.lower().split(' ')
-    else:
-        tokens = [token.lower() for token in sentence]
+    tok_types_res = tokenizer(token_types, return_tensors="pt")
+    tok_types_tensor = tok_types_res["input_ids"]
 
-    tokens = [src_field.init_token] + tokens + [src_field.eos_token]
+    res = tokenizer(input_src, return_tensors="pt")
+    src_tensor = res["input_ids"]
+    src_mask = res["attention_mask"]
 
-    src_indexes = [src_field.vocab.stoi[token] for token in tokens]
-
-    src_tensor = torch.LongTensor(src_indexes).unsqueeze(0).to(device)
-
-    src_mask = model.make_src_mask(src_tensor)
-
-    # visibility matrix
-    batch_visibility_matrix = model.make_visibility_matrix(src_tensor, src_field)
-
-    with torch.no_grad():
-        enc_src, enc_attention = model.encoder(src_tensor, src_mask, tok_types_tensor, batch_visibility_matrix)
-
-    trg_indexes = [trg_field.vocab.stoi[trg_field.init_token]]
-
-    for i in range(max_len):
-
-        trg_tensor = torch.LongTensor(trg_indexes).unsqueeze(0).to(device)
-
-        trg_mask = model.make_trg_mask(trg_tensor)
-
-        with torch.no_grad():
-            output, attention = model.decoder(trg_tensor, enc_src, trg_mask, src_mask)
-
-        pred_token = output.argmax(2)[:, -1].item()
-
-        trg_indexes.append(pred_token)
-
-        if pred_token == trg_field.vocab.stoi[trg_field.eos_token]:
-            break
-
-    trg_tokens = [trg_field.vocab.itos[i] for i in trg_indexes]
-
-    return trg_tokens[1:], attention, enc_attention
-
-
-def translate_sentence_with_guidance(db_id, table_id, sentence, src_field, trg_field, TOK_TYPES, tok_types, SRC, model,
-                                     db_tables_columns, db_tables_columns_types, device, max_len=128, show_progress = False):
-    model.eval()
-    # process the tok_type
-    if isinstance(tok_types, str):
-        tok_types_ids = tok_types.lower().split(' ')
-    else:
-        tok_types_ids = [tok_type.lower() for tok_type in tok_types]
-    tok_types_ids = ['<sos>'] + \
-                    tok_types_ids + ['<eos>']
-    tok_types_ids_indexes = [TOK_TYPES[tok_types_id]
-                             for tok_types_id in tok_types_ids]
-    tok_types_tensor = torch.LongTensor(
-        tok_types_ids_indexes).unsqueeze(0).to(device)
-
-    if isinstance(sentence, str):
-        tokens = sentence.lower().split(' ')
-    else:
-        tokens = [token.lower() for token in sentence]
-
-    tokens = ['<sos>'] + tokens + ['<eos>']
-
-    src_indexes = [src_field[token] for token in tokens] # TODO: there is a "year." that got mapped to "<unk>" need fix
-
-    src_tensor = torch.LongTensor(src_indexes).unsqueeze(0).to(device)
-
-    src_mask = model.make_src_mask(src_tensor)
-
-    # visibility matrix, none for no attention forcing
     batch_visibility_matrix = None
 
     with torch.no_grad():
-        enc_src, enc_attention = model.encoder(src_tensor, src_mask,
-                                               tok_types_tensor, batch_visibility_matrix)
+        enc_src = \
+            model.encoder(src_tensor, src_mask, tok_types_tensor, batch_visibility_matrix)
 
-    trg_indexes = [trg_field['<sos>']]
+    trg_indexes = [label_vocab['<sos>']]
     trg_tokens = []
-
     current_token_type = None
-    if show_progress == True:
-        print('Show the details in each tokens:')
 
     for i in range(max_len):
-
         trg_tensor = torch.LongTensor(trg_indexes).unsqueeze(0).to(device)
-
         trg_mask = model.make_trg_mask(trg_tensor)
-
         with torch.no_grad():
-            output, attention = model.decoder(trg_tensor, enc_src, trg_mask, src_mask)
+            output, attention = \
+                model.decoder(trg_tensor, enc_src, trg_mask, src_mask)
 
         table_columns = []
         try:  # get all columns in a table
@@ -374,27 +307,29 @@ def translate_sentence_with_guidance(db_id, table_id, sentence, src_field, trg_f
             only for single table !!!
             '''
             pred_token = table_id
-            pred_id = trg_field[pred_token]
-            if show_progress == True:
-                print('-------------------\nCurrent Token Type: Table Name , top-3 tokens: [{}]'.format(
-                    current_token_type, pred_token))
+            pred_id = label_vocab[pred_token]
+            # print('-------------------\nCurrent Token Type: Table Name , top-3 tokens: [{}]'.format(
+            #     current_token_type, pred_token))
 
         else:
             topk_ids = torch.topk(output, k=5, dim=2, sorted=True).indices[:, -1, :].tolist()[0]
-            topk_tokens = [trg_field.get_itos()[tok_id] for tok_id in topk_ids]
+            topk_tokens = [label_vocab.get_itos()[tok_id] for tok_id in topk_ids]
 
             '''
             apply guide_decoder_by_candidates
             '''
             pred_id, pred_token = guide_decoder_by_candidates(
-                db_id, table_id, trg_field, sentence, table_columns, db_tables_columns_types, topk_ids,
+                db_id, table_id, label_vocab, input_src, table_columns, db_tables_columns_types, topk_ids,
                 topk_tokens, current_token_type, trg_tokens
             )
-            if show_progress == True:
-                if current_token_type == None:
-                    print('-------------------\nCurrent Token Type: Query Sketch Part , top-3 tokens: [{}]'.format(', '.join(topk_tokens)))
-                else:
-                    print('-------------------\nCurrent Token Type: {} , original top-3 tokens: [{}] , the final tokens by VisAwareTranslation: {}'.format(current_token_type, ', '.join(topk_tokens), pred_token))
+
+            # if current_token_type == None:
+            #     print('-------------------\nCurrent Token Type: Query Sketch Part , top-3 tokens: [{}]'.format(
+            #         ', '.join(topk_tokens)))
+            # else:
+            #     print(
+            #         '-------------------\nCurrent Token Type: {} , original top-3 tokens: [{}] , the final tokens by VisAwareTranslation: {}'.format(
+            #             current_token_type, ', '.join(topk_tokens), pred_token))
 
         current_token_type = None
 
@@ -443,103 +378,268 @@ def translate_sentence_with_guidance(db_id, table_id, sentence, src_field, trg_f
             if trg_tokens[-1] == 'topk':
                 current_token_type = 'topk'
 
-        if pred_id == trg_field['<eos>']:
+        if pred_id == label_vocab['<eos>']:
             break
 
-    return trg_tokens, attention, enc_attention
+    return trg_tokens, attention
 
 
-def postprocessing_group(gold_q_tok, pred_q_tok):
-    # 2. checking (and correct) group-by
+class nvBert2:
+    def __init__(
+            self,
+            temp_dataset_path=".",
+            batch_size=128,
+    ):
+        self.temp_dataset_path = temp_dataset_path
+        self.device = get_device()
 
-    # rule: if other part is the same, and only add group-by part, the result should be the same
-    if 'group' not in gold_q_tok and 'group' in pred_q_tok:
-        groupby_x = pred_q_tok[pred_q_tok.index('group') + 1]
-        if ' '.join(pred_q_tok).replace('group ' + groupby_x, '') == ' '.join(gold_q_tok):
-            pred_q_tok = gold_q_tok
+        (
+            self.train_dl,
+            self.validation_dl,
+            self.test_dl,
+            self.train_dl_small,
+            self.label_vocab,
+            self.types_vocab
+        ) = setup_data(batch_size=batch_size)
 
-    return pred_q_tok
+        OUTPUT_DIM = len(self.label_vocab.vocab)
+        HID_DIM = 256  # it equals to embedding dimension
+        ENC_LAYERS = 3
+        DEC_LAYERS = 3
+        ENC_HEADS = 8
+        DEC_HEADS = 8
+        ENC_PF_DIM = 512
+        DEC_PF_DIM = 512
+        ENC_DROPOUT = 0.1
+        DEC_DROPOUT = 0.1
+        MAX_LENGTH = 256
 
+        enc = BertEncoder(
+            HID_DIM,
+            ENC_LAYERS,
+            ENC_HEADS,
+            ENC_PF_DIM,
+            ENC_DROPOUT,
+            self.device,
+            self.types_vocab,
+            MAX_LENGTH
+        )
 
-def postprocessing(gold_query, pred_query, if_template, src_input):
-    try:
-        # get the template:
-        chart_template = re.findall('<c>.*</c>', src_input)[0]
-        chart_template_tok = chart_template.lower().split(' ')
+        dec = Decoder(OUTPUT_DIM,
+                      HID_DIM,
+                      DEC_LAYERS,
+                      DEC_HEADS,
+                      DEC_PF_DIM,
+                      DEC_DROPOUT,
+                      self.device,
+                      MAX_LENGTH
+                      )
 
-        gold_q_tok = gold_query.lower().split(' ')
-        pred_q_tok = pred_query.lower().split(' ')
+        bert_tokenizer = get_bert_tokenizer()
+        self.SRC_PAD_IDX = bert_tokenizer.pad_token_id
+        self.TRG_PAD_IDX = self.label_vocab.get_stoi()["<pad>"]
 
-        # 0. visualize type. if we have the template, the visualization type must be matched.
-        if if_template:
-            pred_q_tok[pred_q_tok.index('mark') + 1] = gold_q_tok[gold_q_tok.index('mark') + 1]
+        self.model = Seq2Seq(
+            enc,
+            dec,
+            self.SRC_PAD_IDX,
+            self.TRG_PAD_IDX,
+            self.device
+        ).to(self.device)
 
-        # 1. Table Checking. If we focus on single table, must match!!!
-        if 'data' in pred_q_tok and 'data' in gold_q_tok:
-            pred_q_tok[pred_q_tok.index('data') + 1] = gold_q_tok[gold_q_tok.index('data') + 1]
+    def load_model(self, trained_model_path):
+        self.model.load_state_dict(
+            torch.load(
+                trained_model_path,
+                map_location=self.device
+            )
+        )
 
-        pred_q_tok = postprocessing_group(gold_q_tok, pred_q_tok)
+    def translate(
+            self,
+            input_src,
+            token_types,
+            db_id=None,
+            table_id=None,
+            db_tables_columns=None,
+            db_tables_columns_types=None
+    ):
 
-        # 3. Order-by. if we have the template, we can checking (and correct) the predicting order-by
-        # rule 1: if have the template, order by [x]/[y], trust to the select [x]/[y]
-        if 'sort' in gold_q_tok and 'sort' in pred_q_tok and if_template:
-            order_by_which_axis = chart_template_tok[chart_template_tok.index('sort') + 1]  # [x], [y], or [o]
-            if order_by_which_axis == '[x]':
-                pred_q_tok[pred_q_tok.index('sort') + 1] = 'x'
-            elif order_by_which_axis == '[y]':
-                pred_q_tok[pred_q_tok.index('sort') + 1] = 'y'
-            else:
-                pass
+        db_id = db_id or self.db_id
+        table_id = table_id or self.table_id
+        db_tables_columns = db_tables_columns or self.db_tables_columns
+        db_tables_columns_types = db_tables_columns_types or self.db_tables_columns_types
 
-        elif 'sort' in gold_q_tok and 'sort' not in pred_q_tok and if_template:
-            order_by_which_axis = chart_template_tok[chart_template_tok.index('sort') + 1]  # [x], [y], or [o]
-            order_type = chart_template_tok[chart_template_tok.index('sort') + 2]
+        res, attention = translate(
+            input_src,
+            token_types,
+            self.model,
+            self.label_vocab,
+            self.types_vocab,
+            self.device,
+            db_id,
+            table_id,
+            db_tables_columns,
+            db_tables_columns_types
+        )
 
-            if 'x' == gold_q_tok[gold_q_tok.index('sort') + 1] or 'y' == gold_q_tok[gold_q_tok.index('sort') + 1]:
-                pred_q_tok += ['sort', gold_q_tok[gold_q_tok.index('sort') + 1]]
-                if gold_q_tok.index('sort') + 2 < len(gold_q_tok):
-                    pred_q_tok += [gold_q_tok[gold_q_tok.index('sort') + 2]]
-            else:
-                pass
+        res = ' '.join(res).replace(' <eos>', '').lower()
 
+        return res
+
+    def predict(
+            self,
+            nl_question,
+            chart_template=None,
+            show_progress=None,
+            visualization_aware_translation=True
+    ):
+
+        input_src, token_types = self.process_input(nl_question, chart_template)
+
+        res = self.translate(
+            input_src=input_src,
+            token_types=token_types
+        )
+
+        if chart_template != None:
+            res = postprocessing(res, res, True, input_src)
         else:
-            pass
+            res = postprocessing(res, res, False, input_src)
 
-        pred_q_tok = postprocessing_group(gold_q_tok, pred_q_tok)
+        res = ' '.join(res.replace('"', "'").split())
 
-        # 4. checking (and correct) bining
-        # rule 1: [interval] bin
-        # rule 2: bin by [x]
-        if 'bin' in gold_q_tok and 'bin' in pred_q_tok:
-            # rule 1
-            if_bin_gold, if_bin_pred = False, False
+        print('[NL Question]:', nl_question)
+        print('[Chart Template]:', chart_template)
+        print('[Predicted VIS Query]:', res)
 
-            for binn in ['by time', 'by year', 'by weekday', 'by month']:
-                if binn in gold_query:
-                    if_bin_gold = binn
-                if binn in pred_query:
-                    if_bin_pred = binn
+        return res
 
-            if (if_bin_gold != False and if_bin_pred != False) and (if_bin_gold != if_bin_pred):
-                pred_q_tok[pred_q_tok.index('bin') + 3] = if_bin_gold.replace('by ', '')
+    def process_input(self, nl_question, chart_template):
 
-        if 'bin' in gold_q_tok and 'bin' not in pred_q_tok and 'group' in pred_q_tok:
-            # rule 3: group-by x and bin x by time in the bar chart should be the same.
-            bin_x = gold_q_tok[gold_q_tok.index('bin') + 1]
-            group_x = pred_q_tok[pred_q_tok.index('group') + 1]
-            if bin_x == group_x:
-                if ''.join(pred_q_tok).replace('group ' + group_x, '') == ''.join(gold_q_tok).replace(
-                        'bin ' + bin_x + ' by time', ''):
-                    pred_q_tok = gold_q_tok
+        query_template = fix_chart_template(chart_template)
 
-        # group x | bin x ... count A == count B
-        if 'count' in gold_q_tok and 'count' in pred_q_tok:
-            if ('group' in gold_q_tok and 'group' in pred_q_tok) or ('bin' in gold_q_tok and 'bin' in pred_q_tok):
-                pred_count = pred_q_tok[pred_q_tok.index('count') + 1]
-                gold_count = gold_q_tok[gold_q_tok.index('count') + 1]
-                if ' '.join(pred_q_tok).replace('count ' + pred_count, 'count ' + gold_count) == ' '.join(gold_q_tok):
-                    pred_q_tok = gold_q_tok
+        # get a list of mentioned values in the NL question
+        col_names, value_names = self.data_processor.get_mentioned_values_in_NL_question(
+            self.db_id, self.table_id, nl_question, db_table_col_val_map=self.db_table_col_val_map
+        )
+        col_names = ' '.join(str(e) for e in col_names)
+        value_names = ' '.join(str(e) for e in value_names)
 
-    except:
-        print('error at post processing')
-    return ' '.join(pred_q_tok)
+        input_src = (
+            f"<N> {nl_question} </N> " \
+            f"<C> {query_template} </C> " \
+            f"<D> {self.table_id} <COL> {col_names} </COL> <VAL> {value_names} </VAL> </D>").lower()
+        token_types = get_token_types(input_src)
+
+        return input_src, token_types
+
+    def specify_dataset(
+            self,
+            data_type,
+            db_url = None,
+            table_name = None,
+            data = None,
+            data_url = None
+    ):
+        '''
+        this function creates a temporary save db for the input data
+        the save db is a sqlite db in ./dataset/database
+        the db name is temp_<table_name>, there is one table in it called <table_name>
+
+        :param data_type: sqlite3, csv, json
+        :param db_url: db path for sqlite3 database,
+                       e.g., './dataset/database/flight/flight.sqlite'
+        :param table_name: the table name in a sqlite3
+        :param data: DataFrame for csv
+        :param data_url: data path for csv or json
+        :return: save the DataFrame in the self.data
+        '''
+        self.db_id = 'temp_' + table_name
+        self.table_id = table_name
+
+        # read in data as dataframe
+        if data_type == 'csv':
+            if data != None and data_url == None:
+                self.data = data
+            elif data == None and data_url != None:
+                self.data = pd.read_csv(data_url)
+            else:
+                raise ValueError('Please only specify one of the data or data_url')
+        elif data_type == 'json':
+            if data == None and data_url != None:
+                self.data = pd.read_json(data_url)
+            else:
+                raise ValueError(
+                    'Read JSON from the json file, ' 
+                    'please only specify the "data_type" or "data_url"'
+                )
+        elif data_type == 'sqlite3':
+            # Create your connection.
+            try:
+                cnx = sqlite3.connect(db_url)
+                self.data = pd.read_sql_query("SELECT * FROM " + table_name, cnx)
+            except:
+                raise ValueError(
+                    f'Errors in read table from sqlite3 database. \n' 
+                    f'db_url: {db_url}\n'
+                    f' table_name : {table_name} '
+                )
+        else:
+            if data != None and type(data) == pd.core.frame.DataFrame:
+                self.data = data
+            else:
+                raise ValueError(
+                    'The data type must be one of the '
+                    'csv, json, sqlite3, or a DataFrame object.'
+                )
+
+        # same data column name and types
+        self.db_tables_columns_types = dict()
+        self.db_tables_columns_types[self.db_id] = dict()
+        self.db_tables_columns_types[self.db_id][table_name] = dict()
+        for col, _type in self.data.dtypes.items():
+            # print(col, _type)
+            if 'int' in str(_type).lower() or 'float' in str(_type).lower():
+                _type = 'numeric'
+            else:
+                _type = 'categorical'
+            self.db_tables_columns_types[self.db_id][table_name][col.lower()] = _type
+
+        # convert all columns in data df to string lower case
+        self.data.columns = self.data.columns.str.lower()
+
+        # a dictionary of table column names
+        self.db_tables_columns = {
+            self.db_id:{
+                self.table_id: list(self.data.columns)
+            }
+        }
+
+        # saves the input data to a storage place in .'dataset/database
+        # to be used by data processor
+        if data_type == 'json' or data_type == 'sqlite3':
+            # write to sqlite3 database
+            dir = osp.join(self.temp_dataset_path, self.db_id)
+            if not os.path.exists(dir):
+                os.makedirs(dir)
+            conn = sqlite3.connect(osp.join(dir, self.db_id+'.sqlite'))
+            self.data.to_sql(self.table_id, conn, if_exists='replace', index=False)
+
+        # create data processor and retrieve
+        # all data from db and save to db_table_col_val_map
+        self.data_processor = ProcessData4Training(db_url=self.temp_dataset_path)
+        self.db_table_col_val_map = {}
+        table_cols = self.data_processor.get_table_columns(self.db_id)
+        self.db_table_col_val_map[self.db_id] = {}
+        for table, cols in table_cols.items():
+            col_val_map = self.data_processor.get_values_in_columns(
+                self.db_id,
+                table,
+                cols,
+                conditions='remove'
+            )
+            self.db_table_col_val_map[self.db_id][table] = col_val_map
+
+    def show_dataset(self, top_rows=5):
+        return self.data[:top_rows]

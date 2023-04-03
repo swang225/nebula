@@ -21,6 +21,7 @@ def split_df(df, r1=0.8, r2=0.5, seed=123):
     return train_df, test_df, valid_df
 
 
+# try without label stratified sampling
 def split_ar_anim_df(df, random_seed):
 
     labels = set(df["label"].values)

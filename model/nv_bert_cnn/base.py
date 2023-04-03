@@ -57,7 +57,7 @@ class nvBertCNN:
         ) = setup_data(batch_size=batch_size)
 
         OUTPUT_DIM = len(self.label_vocab.vocab)
-        HID_DIM = int(EMBEDDING_SIZE / 4)  # it equals to embedding dimension
+        HID_DIM = int(EMBEDDING_SIZE / 3)  # it equals to embedding dimension, try / 3, since that would give the same dimension as the original model
         DEC_LAYERS = 3
         DEC_HEADS = 8
         DEC_PF_DIM = 512

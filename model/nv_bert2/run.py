@@ -1,9 +1,9 @@
-from nebula.model.nv_bert import nvBert
+from nebula.model.nv_bert import nvBert2
 import os.path as osp
 from nebula import root
 
 temp_path1 = "C:/Users/aphri/Documents/t0002/pycharm/data/ncnet/temp_data"
-m1 = nvBert(temp_dataset_path=temp_path1)
+m1 = nvBert2(temp_dataset_path=temp_path1)
 
 best_model_path = osp.join(root(), "model/nv_bert/result/model_best.pt")
 m1.load_model(best_model_path)
