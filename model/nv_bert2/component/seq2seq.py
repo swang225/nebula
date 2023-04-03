@@ -23,8 +23,8 @@ class Seq2Seq(nn.Module):
 
     def make_src_mask(self, src):
         # src = [batch size, src len]
-        src_mask = (src != self.src_pad_idx).unsqueeze(1).unsqueeze(2)
-        # src_mask = [batch size, 1, 1, src len]
+        src_mask = src != self.src_pad_idx
+        # src_mask = [batch size, src len]
 
         return src_mask
 

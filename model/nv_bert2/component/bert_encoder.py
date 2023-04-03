@@ -85,7 +85,7 @@ class EncoderLayer(nn.Module):
         # src_mask = [batch size, src len]
 
         # self attention
-        _src, _attention = self.self_attention(src, src, src, src_mask, batch_matrix)
+        _src, _attention = self.self_attention(src, src, src, src_mask.unsqueeze(1).unsqueeze(2), batch_matrix)
 
         # dropout, residual connection and layer norm
         src = self.self_attn_layer_norm(src + self.dropout(_src))
