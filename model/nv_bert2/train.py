@@ -26,6 +26,7 @@ def train(model, iterator, optimizer, criterion, clip):
     model.train()
 
     epoch_loss = 0
+    epoch_count = 0
 
     counter = Counter(total=len(iterator))
     counter.start()
@@ -64,8 +65,10 @@ def train(model, iterator, optimizer, criterion, clip):
         optimizer.step()
 
         epoch_loss += loss.item()
+        epoch_count += 1
 
         counter.update()
+        print(f"current loss: {epoch_loss / epoch_count}")
 
         del src
         del trg
