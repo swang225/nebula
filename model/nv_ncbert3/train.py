@@ -151,7 +151,7 @@ def run_train(
         start_time = time.time()
 
         train_loss = train(m1.ncNet, train_iterator, optimizer, criterion, CLIP)
-        valid_loss = evaluate(m1.ncNet, m1.valid_iterator, criterion, m1.SRC)
+        valid_loss = evaluate(m1.ncNet, m1.valid_iterator, criterion)
 
         end_time = time.time()
 
