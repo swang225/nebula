@@ -28,7 +28,7 @@
 % Full-width abstract
 \renewcommand{\maketitlehookd}{%
 	\begin{abstract}
-		\noindent Translation of natural language into syntactically correct commands for the visualization of data is an important application of natural language models and could be leveraged to many different tasks. A closely related effort is the task of translating natural languages into sql queries, which in turn could be translated into visualization with additional information from the natural language query supplied\cite{Zhong:2017qr}. In order to contribute to the progress in this area of research, we built natural language translation models to construct simplified versions of data and visualization queries in a syntax called Vega Zero first proposed by Luo, Yuyu, et al\cite{Luo:2021qr}. In this paper, we explore the design and performance of these sequence to sequence transformer based machine learning architecture using large language models such as BERT as encoders to predict visualization commands from natural language queries. 
+		\noindent Translation of natural language into syntactically correct commands for data visualization is an important application of natural language models and could be leveraged to many different tasks. A closely related effort is the task of translating natural languages into sql queries, which in turn could be translated into visualization with additional information from the natural language query supplied\cite{Zhong:2017qr}. In order to contribute to the progress in this area of research, we built natural language translation models to construct simplified versions of data and visualization queries in a syntax called Vega Zero first proposed by Luo, Yuyu, et al\cite{Luo:2021qr}. In this paper, we explore the design and performance of these sequence to sequence transformer based machine learning architecture using large language models such as BERT as encoders to predict visualization commands from natural language queries. 
 	\end{abstract}
 }
 
@@ -76,7 +76,7 @@ Visualize \blue{BAR} \gray{SELECT JOB\_ID , SUM(MANAGER\_ID) FROM employees WHER
 
 \begin{figure}
 	\includegraphics[width=\linewidth]{visualization.png}
-	\caption{Visualize \blue{BAR} \gray{SELECT JOB\_ID , SUM(MANAGER\_ID) FROM employees WHERE salary BETWEEN 8000 AND 12000 AND commission\_pct != "null" OR department\_id != 40 GROUP BY JOB\_ID ORDER BY JOB\_ID ASC}.}
+	\caption{Rendering: Visualize \blue{BAR} \gray{SELECT JOB\_ID , SUM(MANAGER\_ID) FROM employees WHERE salary BETWEEN 8000 AND 12000 AND commission\_pct != "null" OR department\_id != 40 GROUP BY JOB\_ID ORDER BY JOB\_ID ASC}.}
 	\label{fig:visualization}
 \end{figure}
 
@@ -140,11 +140,31 @@ We also remove the attention mask (referred to as attention forcing in Luo 2022\
 	\label{fig:ncbert}
 \end{figure*}
 
-We then proceed to replace the ncNet encoder with the BERT model encoder, as shown in Figure \ref{fig:ncbert}. Because the BERT model is pre-trained with a much larger vocabulary, the hope is that this knowledge would transfer to the new model, ncBERT, once we fine tune it. We train an additional BERT encoder model with convolutional layers added to the BERT embeddings, in order to distill relevant information from BERT model embeddings before decoding, as the BERT embedding has a much larger dimension that may contain information irrelevant to the data visualization task. The convolutional layers incorporated model is shown in Figure ... .
+\begin{figure*}
+	\includegraphics[width=\linewidth]{ncbert_cnn_architecture.png}
+	\caption{Architecture of ncBERT\_CNN model.}
+	\label{fig:ncbertcnn}
+\end{figure*}
+
+We then proceed to replace the ncNet encoder with the BERT model encoder, as shown in Figure \ref{fig:ncbert}. Because the BERT model is pre-trained with a much larger vocabulary, the hope is that this knowledge would transfer to the new model, ncBERT, once we fine tune it. We train an additional BERT encoder model with convolutional layers added to the BERT embeddings, in order to distill relevant information from BERT model embeddings before decoding, as the BERT embedding has a much larger dimension that may contain information irrelevant to the data visualization task. The convolutional layers incorporated model is shown in Figure \ref{fig:ncbertcnn} .
 
 \subsubsection{Combining ncNet and BERT Model}
 
+\begin{figure*}
+	\includegraphics[width=\linewidth]{ncnetbert_architecture.png}
+	\caption{Architecture of ncNetBERT model.}
+	\label{fig:ncnetbert}
+\end{figure*}
+
+Finally, we create an encoder combining both the ncNet and BERT encoders, we achieve this by reshaping the embeddings from BERT to the same dimension as ncNet encoder and concatenating them together. The architecture of the model can be found in Figure \ref{fig:ncnetbert}. The motivation of creating this model is to analyze the effect of BERT embedding on the baseline model and explore the potential of enhancing the original encoder without completely replacing it. However, the implication of this approach is that words that does not exist in the original ncNet encoder still could not be used, further research needs to be done to remove this limitation. 
+
 \subsection{Evaluation}
+
+The models are trained and tested with training dataset of size 25238, validation dataset of size 1430 and test dataset of size 4920. Each model is run over at least 5 epochs with a learning rate of 0.0005 and the resulting losses are recorded.
+
+Then the accuracy of the models are evaluated by running predictions with the models over the test dataset, with the natural language query tokens and the first n-1 tokens of the label as input (the label tokens are masked so that successive predictions of label are not affected by future label tokens), counting the total number of correct predictions and dividing it by the total number of predictions.
+
+Finally, we evaluate the models one more time with a guide search algoirthm to prediction. The algorithm starts the prediction with the start of sentence token, then repeatedly predicts the next label token with guidance until the end of sentence token is reached. This evaluation provides a more realistic measure of the model's usability. The accuracy from this evaluation is defined as the total number of complete label match over the total number of test labels.
 
 \section{Results}
 
