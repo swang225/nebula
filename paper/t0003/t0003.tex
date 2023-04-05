@@ -120,12 +120,6 @@ The augmented data were provided in the Github repo for the ncNet paper\cite{Luo
 
 \subsubsection{ncNet}
 
-\begin{figure*}
-	\includegraphics[width=\linewidth]{ncnet_architecture.png}
-	\caption{Architecture of ncNet model.}
-	\label{fig:ncnet}
-\end{figure*}
-
 The ncNet\cite{Luo:2022qr} model is a sequence to sequence multi-head transformer model, where the encoder transforms the natural language queries into embeddings combining position and token type information, and apply multiple layers of multi-head attention transformers to incorporate contextual information into the encoded embeddings. Shown in Figure  \ref{fig:ncnet},  The decoder then takes in the encoded embeddings and the embeddings of the previously predicted tokens to further transform the predicted tokens with attention to the encoded embeddings. We us the ncNet model as our baseline, and replace the encoder with various different architectures.
 
 One important fact to note is that the ncNet model uses all words occuring in the training, testing and validation dataset as vocabulary. Therefore letting the possibility of natural language query inputs.
@@ -134,27 +128,9 @@ We also remove the attention mask (referred to as attention forcing in Luo 2022\
 
 \subsubsection{BERT Model}
 
-\begin{figure*}
-	\includegraphics[width=\linewidth]{ncbert_architecture.png}
-	\caption{Architecture of ncBERT model.}
-	\label{fig:ncbert}
-\end{figure*}
-
-\begin{figure*}
-	\includegraphics[width=\linewidth]{ncbert_cnn_architecture.png}
-	\caption{Architecture of ncBERT\_CNN model.}
-	\label{fig:ncbertcnn}
-\end{figure*}
-
 We then proceed to replace the ncNet encoder with the BERT model encoder, as shown in Figure \ref{fig:ncbert}. Because the BERT model is pre-trained with a much larger vocabulary, the hope is that this knowledge would transfer to the new model, ncBERT, once we fine tune it. We train an additional BERT encoder model with convolutional layers added to the BERT embeddings, in order to distill relevant information from BERT model embeddings before decoding, as the BERT embedding has a much larger dimension that may contain information irrelevant to the data visualization task. The convolutional layers incorporated model is shown in Figure \ref{fig:ncbertcnn} .
 
 \subsubsection{Combining ncNet and BERT Model}
-
-\begin{figure*}
-	\includegraphics[width=\linewidth]{ncnetbert_architecture.png}
-	\caption{Architecture of ncNetBERT model.}
-	\label{fig:ncnetbert}
-\end{figure*}
 
 Finally, we create an encoder combining both the ncNet and BERT encoders, we achieve this by reshaping the embeddings from BERT to the same dimension as ncNet encoder and concatenating them together. The architecture of the model can be found in Figure \ref{fig:ncnetbert}. The motivation of creating this model is to analyze the effect of BERT embedding on the baseline model and explore the potential of enhancing the original encoder without completely replacing it. However, the implication of this approach is that words that does not exist in the original ncNet encoder still could not be used, further research needs to be done to remove this limitation. 
 
@@ -168,6 +144,33 @@ Finally, we evaluate the models one more time with a guide search algoirthm to p
 
 \section{Results}
 
+After running 5 epochs with learning rate 0.0005 and keeping the model version with the lowest validation loss, the test accuracy of the models are reported in Table \ref{tab:accuracy}.
+
+\begin{table} % Single column table
+	\caption{Model Test Accuracy.}
+	\centering
+	\begin{tabular}{l l r}
+		\toprule
+		Model & Accuracy \\
+		\midrule
+		ncNet & 0.956 \\
+		ncNet w/o AF & 0.957  \\
+		\hline
+		nvBERT & 0.788 \\
+		nvBERT\_CNN & 0.788 \\
+		\hline
+		nvncNetBERT & 0.890 \\
+		\bottomrule
+	\end{tabular}
+	\label{tab:accuracy}
+\end{table}
+
+As we can see from the results, the origina ncNet models produced test accuracies in excess of 95\%. While the BERT based transformer models were able to achieve close to 80\% accuracy. This is attributable to the fact that the BERT model contains a much larger vocabulary than the ncNet model trained only on the vocabulary of tokens present in the dataset.
+
+Further more, the removal of attention forcing in the ncNet model does not appear to affect the test accuracy, suggesting that its absence in nvBERT models had no bearing on the accuracy results of the nvBET models. The accuracies of nvBERT models with and without convolutional layers does not appear to affect the accuracy at all, suggesting minimal impact of the convolutional layers.
+
+Finally the combined ncNet and BERT encoder produced results that improved unpon the nvBERT only models, suggesting that were a model able to combine the ncNET and BERT encoder while remaining generalizable, the results would improve along with the benefits of transfer learning.
+
 \section{Discussion}
 
 %----------------------------------------------------------------------------------------
@@ -179,5 +182,30 @@ Finally, we evaluate the models one more time with a guide search algoirthm to p
 \bibliography{t0003.bib}
 
 %----------------------------------------------------------------------------------------
+
+\begin{figure*}
+	\includegraphics[width=\linewidth]{ncnet_architecture.png}
+	\caption{Architecture of ncNet model.}
+	\label{fig:ncnet}
+\end{figure*}
+
+
+\begin{figure*}
+	\includegraphics[width=\linewidth]{ncbert_architecture.png}
+	\caption{Architecture of ncBERT model.}
+	\label{fig:ncbert}
+\end{figure*}
+
+\begin{figure*}
+	\includegraphics[width=\linewidth]{ncbert_cnn_architecture.png}
+	\caption{Architecture of ncBERT\_CNN model.}
+	\label{fig:ncbertcnn}
+\end{figure*}
+
+\begin{figure*}
+	\includegraphics[width=\linewidth]{ncnetbert_architecture.png}
+	\caption{Architecture of ncNetBERT model.}
+	\label{fig:ncnetbert}
+\end{figure*}
 
 \end{document}
