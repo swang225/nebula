@@ -187,7 +187,7 @@ if __name__ == '__main__':
     opt.output_dir = "C:/Users/aphri/Documents/t0002/pycharm/data/ncnet/output_models"
     opt.epoch = 10
     opt.learning_rate = 0.0005
-    opt.batch_size = 20
+    opt.batch_size = 128
     opt.max_input_length = 128
 
     run_train(opt=opt, testing=True)
