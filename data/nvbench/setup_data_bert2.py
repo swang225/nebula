@@ -50,7 +50,9 @@ class NvBenchBertDataset(Dataset):
         tok_res = self.bert_tokenizer(cur_data["token_type"])
         tok = tok_res["input_ids"]
 
-        return src, lbl, tok
+        has_chart_type = '[T]' not in cur_data["source"]
+
+        return src, lbl, tok, has_chart_type
 
 
 class DataPadder:
@@ -78,7 +80,9 @@ class DataPadder:
         lbl_batch = self.batch_data(data_zip[1], self._trg_pad_id)
         tok_batch = self.batch_data(data_zip[2], self._tok_pad_id)
 
-        return src_batch, lbl_batch, tok_batch
+        has_chart_type_batch = data_zip[3]
+
+        return src_batch, lbl_batch, tok_batch, has_chart_type_batch
 
 
 def get_bert_tokenizer():

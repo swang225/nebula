@@ -6,7 +6,7 @@ import os.path as osp
 
 import torch
 from nebula.common import get_device
-from nebula.model.ncnet_no_af.translate import (
+from nebula.model.nv_ncbert3.translate import (
     translate_sentence_with_guidance,
     translate_sentence,
     postprocessing

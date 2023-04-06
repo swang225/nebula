@@ -112,6 +112,8 @@ The natural language queries are also augmented to include the template of vega 
 
 The natural language query is enclosed in <N> </N> markers, the vega zero template is enclosed in <C> </D> markers and the locations of vega zero query fields are marked by special tokens: [T], [X], [Y], [Z], [F], [G], [B], [S] and [K]. These are the syntax used by the original ncNet sequence to sequence transformer model and we follow the same rules for our models as well.
 
+Finally, every natural language and visualization query pair in the dataset is augmented with two versions, one with the chart type kept as placeholder, [T], and another with the chart type filled in (bar, line, etc). The motivation is to train the model to predict the visualization query whether the chart type is explicitly specified or not.
+
 \subsubsection{Data Loader}
 
 The augmented data were provided in the Github repo for the ncNet paper\cite{Luo:2022qr} , which we use unaltered. However, the original dataloader no longer works the latest version of Pytorch, we rewrote the dataloader to be used for training and testing the ncNet model and our own models.
@@ -144,26 +146,30 @@ Finally, we evaluate the models one more time with a guide search algoirthm to p
 
 \section{Results}
 
-After running 5 epochs with learning rate 0.0005 and keeping the model version with the lowest validation loss, the test accuracy of the models are reported in Table \ref{tab:accuracy}.
+\subsection{Accuracy}
+
+After running 5 epochs with learning rate 0.0005 and keeping the model version with the lowest validation loss, the test accuracy of the models are reported in Table \ref{tab:accuracy}. The accuracy of a model is defined as the probability of predicting the next word correctly given part of the label query.
 
 \begin{table} % Single column table
 	\caption{Model Test Accuracy.}
 	\centering
-	\begin{tabular}{l l r}
+	\begin{tabular}{l l l l r}
 		\toprule
-		Model & Accuracy \\
+		Model & Query & Query+Chart & Overall  \\
 		\midrule
-		ncNet & 0.956 \\
-		ncNet w/o AF & 0.957  \\
+		ncNet & 0.952 & 0.960 & 0.956 \\
+		ncNet w/o AF & 0.954 & 0.961 & 0.957  \\
 		\hline
-		nvBERT & 0.788 \\
-		nvBERT\_CNN & 0.788 \\
+		nvBERT & 0.788 & 0.788 & 0.788 \\
+		nvBERT\_CNN &  0.788 & 0.788 & 0.788 \\
 		\hline
-		nvncNetBERT & 0.890 \\
+		nvncNetBERT & 0.887 & 0.893 & 0.890 \\
 		\bottomrule
 	\end{tabular}
 	\label{tab:accuracy}
 \end{table}
+
+The table shows three columns, the accuracy of the models on queries where chart type is not specified (Query), the accuracy of the models on queries where chart type is specified (Query+Chart) and the overall accuracy (Overall).
 
 As we can see from the results, the origina ncNet models produced test accuracies in excess of 95\%. While the BERT based transformer models were able to achieve close to 80\% accuracy. This is attributable to the fact that the BERT model contains a much larger vocabulary than the ncNet model trained only on the vocabulary of tokens present in the dataset.
 
@@ -171,7 +177,44 @@ Further more, the removal of attention forcing in the ncNet model does not appea
 
 Finally the combined ncNet and BERT encoder produced results that improved unpon the nvBERT only models, suggesting that were a model able to combine the ncNET and BERT encoder while remaining generalizable, the results would improve along with the benefits of transfer learning.
 
+Besides the overall accuracy difference, the general trend is that the accuracy for query only tests are slightly lower than accuracy for query and chart type tests. This is expected since the query only tests require the model to predict an additional field. However, given that the accuracy differences are small, the chart type prediction is generally accurate.
+
+\subsection{Guided Search Accuracy}
+
+We next look at the accuracy of predicting the entire label query. The algorithm of guided search, as used by the original ncNet model, proceeds as follows: starting with the start of sentence token for the label, successively predict the top five candidates. Within the top five candidates, the top candidate is chosen unless it does not belong to the possible words for the current position being predicted, in which case the rest of the candidates are iterated over to find a suitable choice. Table \ref{tab:guidedaccuracy} shows the results for each model. 
+
+\begin{table} % Single column table
+	\caption{Model Test Accuracy with Guided Search.}
+	\centering
+	\begin{tabular}{l l l l r}
+		\toprule
+		Model & Query & Query+Chart & Overall  \\
+		\midrule
+		ncNet & 0.622 & 0.723 & 0.673 \\
+		ncNet w/o AF & 0.650 & 0.745 & 0.698  \\
+		\hline
+		nvBERT & 0.0252 & 0.131 & 0.0780 \\
+		nvBERT\_CNN &  0.0195 & 0.119 & 0.0693 \\
+		\hline
+		nvncNetBERT & 0.211 & 0.334 & 0.272 \\
+		\bottomrule
+	\end{tabular}
+	\label{tab:guidedaccuracy}
+\end{table}
+
+From looking at the results, it's immediately clear that the lower accuracy in the BERT based models are amplified through the guided search process, resulting in a low overall accuracy of 7.8\%. This effect also shows up in the difference between query only and query with chart type accuracy, where the small difference in Table \ref{tab:accuracy} becomes much larger in Table \ref{tab:guidedaccuracy}.
+
+\subsection{Training and Loss}
+
+Show the training and loss history...
+
+\subsection{Sample analysis}
+
+Show some examples of correct and incorrect predictions...
+
 \section{Discussion}
+
+Discuss how our tests demonstrated the potential of using BERT and other generalized language model for this problem...
 
 %----------------------------------------------------------------------------------------
 %	 REFERENCES

@@ -18,6 +18,12 @@ def evaluate(model, iterator, vocab):
     correct = 0
     total = 0
 
+    nl_correct = 0
+    nl_total = 0
+
+    wc_correct = 0
+    wc_total = 0
+
     counter = Counter(total=len(iterator))
     counter.start()
 
@@ -46,14 +52,26 @@ def evaluate(model, iterator, vocab):
 
             counter.update()
 
-            print(f"currency accuracy: {correct/total}")
+            if batch[3][0]:
+                wc_correct += res.sum().item()
+                wc_total += len(res)
+            else:
+                nl_correct += res.sum().item()
+                nl_total += len(res)
+
+            if nl_total > 0 and wc_total > 0 and total > 0:
+                print(f"current accuracy: {correct / total}")
+                print(f"current accuracy (nl only): {nl_correct / nl_total}")
+                print(f"current accuracy (with chart): {wc_correct / wc_total}")
 
             del src
             del trg
             del output
             del output_dim
 
-    print(f"final accuracy: {correct/total}")
+    print(f"final accuracy: {correct / total}")
+    print(f"final accuracy (nl only): {nl_correct / nl_total}")
+    print(f"final accuracy (with chart): {wc_correct / wc_total}")
 
 
 if __name__ == '__main__':

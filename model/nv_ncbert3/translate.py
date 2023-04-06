@@ -2,6 +2,7 @@ import re
 import json
 
 import torch
+from nebula.data.nvbench.setup_data_bert3 import get_bert_tokenizer
 
 
 def get_candidate_columns(src):
@@ -339,12 +340,22 @@ def translate_sentence_with_guidance(db_id, table_id, sentence, src_field, trg_f
 
     src_mask = model.make_src_mask(src_tensor)
 
-    # visibility matrix, none for no attention forcing
-    batch_visibility_matrix = None
+    bert_src = get_bert_tokenizer()(sentence, return_tensors="pt")
+    bert_src = bert_src["input_ids"]
+    bert_src_mask = model.make_bert_src_mask(bert_src)
+
+    combined_mask = torch.cat((src_mask, bert_src_mask.unsqueeze(1).unsqueeze(2)), dim=3)
 
     with torch.no_grad():
-        enc_src, enc_attention = model.encoder(src_tensor, src_mask,
-                                               tok_types_tensor, batch_visibility_matrix)
+        enc_src, enc_attention = model.encoder(
+            src_tensor,
+            src_mask,
+            tok_types_tensor,
+            None,
+            bert_src,
+            bert_src_mask,
+            combined_mask
+        )
 
     trg_indexes = [trg_field['<sos>']]
     trg_tokens = []
@@ -360,7 +371,7 @@ def translate_sentence_with_guidance(db_id, table_id, sentence, src_field, trg_f
         trg_mask = model.make_trg_mask(trg_tensor)
 
         with torch.no_grad():
-            output, attention = model.decoder(trg_tensor, enc_src, trg_mask, src_mask)
+            output, attention = model.decoder(trg_tensor, enc_src, trg_mask, combined_mask)
 
         table_columns = []
         try:  # get all columns in a table

@@ -45,7 +45,9 @@ class NvBenchBertDataset(Dataset):
 
         lbl = self.string_to_ids(cur_data["label"], self.label_tokenzier, self.label_vocab)
 
-        return src, lbl
+        has_chart_type = '[T]' not in cur_data["source"]
+
+        return src, lbl, has_chart_type
 
 
 class DataPadder:
@@ -71,7 +73,9 @@ class DataPadder:
         src_batch = self.batch_data(data_zip[0], self._src_pad_id)
         lbl_batch = self.batch_data(data_zip[1], self._trg_pad_id)
 
-        return src_batch, lbl_batch
+        has_chart_type_batch = data_zip[2]
+
+        return src_batch, lbl_batch, has_chart_type_batch
 
 
 def get_bert_tokenizer():
