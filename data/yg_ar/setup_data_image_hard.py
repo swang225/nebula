@@ -24,11 +24,11 @@ def split_df(df, r1=0.8, r2=0.5, seed=123):
 # try without label stratified sampling
 def split_ar_anim_df(df, random_seed):
 
-    labels = set(df["label"].values)
+    labels = set(df["label_at"].values)
 
     dfs = []
     for label in labels:
-        dfs.append(df[df["label"] == label])
+        dfs.append(df[df["label_at"] == label])
 
     train_list = []
     test_list = []
@@ -134,11 +134,6 @@ def conform_embedding(df, nheads):
 def read_data(df_path, random_seed):
 
     df = pd.read_pickle(df_path)
-
-    df["label_t"] = df["label"] + "_" + df["action_type"].astype(str)
-    df["label_th"] = df["label_t"] + "_" + df["hair"].astype(str)
-    df["label_thc"] = df["label_th"] + "_" + df["cloth"].astype(str)
-    df["label_thcp"] = df["label_thc"] + "_" + df["pants"].astype(str)
 
     train_df, test_df, valid_df = split_ar_anim_df(df, random_seed)
     train_df = train_df.sample(frac=1, random_state=random_seed)  # randomize train_df
