@@ -60,7 +60,7 @@ Natural language to visualization research has been conducted for decades, some 
 
 Recent research exists for applying BERT model to the task of data visualization\cite{Can:2021qr} by converting natural language into vector representation embeddings and use these embeddings to predict various ingredients needed for the visualization of tabular data such as chart type, data columns and aggregation type. However, the structured approach to the problem inherently limits the expressive power of the system to generate complex visualizations.
 
-A new dataset, nvBench\cite{Luo:2021qr}, was made publicly available for research purposes in 2021. The dataset contains pairs of natural language queries and data visualization commands in vega zero syntax\cite{Luo:2022qr}. A self-contained sequence-to-sequence model, ncNet\cite{Luo:2022qr}, created for and trained on the dataset was also made available. We base our research on this dataset and the ncNet transformer model, modifying the architecture to use BERT and other language models to train and test generalizable natural lanuage to data visualization models. 
+A new dataset, nvBench\cite{Luo:2021qr}, was made publicly available for research purposes in 2021. The dataset contains pairs of natural language queries and data visualization commands in vega zero syntax\cite{Luo:2022qr}. A self-contained sequence-to-sequence model, ncNet\cite{Luo:2022qr}, created for and trained on the dataset was also made available. We base our research on this dataset and the ncNet transformer model, modifying the architecture to use BERT and other language models to train and test generalizable natural lanuage to data visualization models, eventually applying the pre-trained T5 model to the problem and achieve superior results. 
 
 \section{Methods}
 
@@ -134,7 +134,11 @@ We then proceed to replace the ncNet encoder with the BERT model encoder, as sho
 
 \subsubsection{Combining ncNet and BERT Model}
 
-Finally, we create an encoder combining both the ncNet and BERT encoders, we achieve this by reshaping the embeddings from BERT to the same dimension as ncNet encoder and concatenating them together. The architecture of the model can be found in Figure \ref{fig:ncnetbert}. The motivation of creating this model is to analyze the effect of BERT embedding on the baseline model and explore the potential of enhancing the original encoder without completely replacing it. However, the implication of this approach is that words that does not exist in the original ncNet encoder still could not be used, further research needs to be done to remove this limitation. 
+Furthermore, we create an encoder combining both the ncNet and BERT encoders, we achieve this by reshaping the embeddings from BERT to the same dimension as ncNet encoder and concatenating them together. The architecture of the model can be found in Figure \ref{fig:ncnetbert}. The motivation of creating this model is to analyze the effect of BERT embedding on the baseline model and explore the potential of enhancing the original encoder without completely replacing it. However, the implication of this approach is that words that does not exist in the original ncNet encoder still could not be used, further research needs to be done to remove this limitation. 
+
+\subsubsection{CodeT5}
+
+Finally, we have used the pre-trained CodeT5 model to fine-tune on the nvBench dataset. The results are very encouraging, where we achieved 98\% prediction accuracy and 88\% guided search accuracy.
 
 \subsection{Evaluation}
 
@@ -164,6 +168,8 @@ After running 5 epochs with learning rate 0.0005 and keeping the model version w
 		nvBERT\_CNN &  0.788 & 0.788 & 0.788 \\
 		\hline
 		nvncNetBERT & 0.887 & 0.893 & 0.890 \\
+		\hline
+		codeT5 & & & 0.97 \\
 		\bottomrule
 	\end{tabular}
 	\label{tab:accuracy}
@@ -197,6 +203,8 @@ We next look at the accuracy of predicting the entire label query. The algorithm
 		nvBERT\_CNN &  0.0195 & 0.119 & 0.0693 \\
 		\hline
 		nvncNetBERT & 0.211 & 0.334 & 0.272 \\
+		\hline
+		codeT5 & & & 0.88 \\
 		\bottomrule
 	\end{tabular}
 	\label{tab:guidedaccuracy}
@@ -206,7 +214,13 @@ From looking at the results, it's immediately clear that the lower accuracy in t
 
 \subsection{Training and Loss}
 
-Show the training and loss history...
+\begin{figure*}
+	\includegraphics[width=\linewidth]{loss_figure.png}
+	\caption{Train and Validation Loss of Models.}
+	\label{fig:loss}
+\end{figure*}
+
+The results of train and validation loss for ncNet, ncNet without attention forcing, nvBERT, nvBERT\_CNN and nvncNetBERT are shown for the first 5 epochs in \ref{fig:loss}. The BERT encoder models show much smaller drop in train loss from epoch to epoch, due to transfer learning that occurs. However the BERT encoder models do not show significant drop in validation loss, suggesting that most of fine-tuning has happened in the first epoch.
 
 \subsection{Sample analysis}
 

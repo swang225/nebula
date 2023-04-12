@@ -78,7 +78,7 @@ Our simulation also supports the option to include static background and dynamic
 
 \subsection{Data Set} From the actions and configurations available within our simulation program, we generated 3 sets of video actions data of varying difficulties based on the zoom, offset, angle and scene background configurations specified: easy, medium and hard.
 
-The configurations of the three datasets are listed in the Table \ref{tab:dataconfig}. Each dataset is generated as follows: for each of the 40 action and action types, we sample 25 random hair, cloth and pants style combinations to create action scenes for, and for each action scene, we capture the action with 20 cameras of randomly generated offsets and angles based on the constraints specified. Each dataset is therefore consisted of 20,000 videos respectively.
+The configurations of the three datasets are listed in the Table \ref{tab:dataconfig}. Each dataset is generated as follows: for each of the 40 action and action types, we sample 25 random hair, cloth and pants style combinations to create action scenes for, and for each action scene, we capture the action with 20 cameras of randomly generated offsets and angles based on the constraints specified. Each dataset is therefore consisted of 20,000 videos, every action and action type label combination contains 500 videos and every action label contains 2000 videos.
 
 \begin{table} % Single column table
 	\caption{Data set configurations: zoom in percentage, offset in meters, angle in degrees.}
@@ -163,19 +163,19 @@ For every data set and model training, we split the sample data into three sets,
 		\midrule
 		SVM & Downsize & 37\% & 29\% & - & - & - & - \\
 		Logistic & Downsize & 43\% & 16\% & - & - & - & - \\
-		GBT & Downsize & 71\% & - & - & - & - & - \\
+		GBT & Downsize & 71\% & 29\% & - & - & - & - \\
 		\hline
 		SVM & PCA & 48\% & 42\% & - & - & - & - \\
 		Logistic & PCA & 44\% & 17\% & - & - & - & - \\
-		GBT & PCA & - & - & - & - & - & - \\
+		GBT & PCA & 69\% & 30\% & - & - & - & - \\
 		\hline
-		SVM & HOG|PCA & 68\% & 54\% & - & - & - & - \\
-		Logistic & HOG|PCA & 55\% & 21\% & - & - & - & - \\
-		GBT & HOG|PCA & 85\% & - & - & - & - & - \\
+		SVM & HOG|PCA & 68\% & 54\% & 27\% & 11\% & - & - \\
+		Logistic & HOG|PCA & 55\% & 21\% & 34\% & 10\% & - & - \\
+		GBT & HOG|PCA & 85\% & 46\% & - & - & - & - \\
 		\hline
 		SVM & SIFT|PCA & 37\% & 27\% & - & - & - & - \\
 		Logistic & SIFT|PCA & 43\% & 12\% & - & - & - & - \\
-		GBT & SIFT|PCA & - & - & - & - & - & - \\
+		GBT & SIFT|PCA & 59\% & 18\% & - & - & - & - \\
 		\hline
 		CNN & & - & - & - & - & 95\% & 92\% \\
 		\bottomrule
