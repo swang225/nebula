@@ -170,7 +170,7 @@ After running 5 epochs with learning rate 0.0005 and keeping the model version w
 		\hline
 		nvncNetBERT & 89\% & 89\% & 89\% \\
 		\hline
-		codeT5 & & & 97\% \\
+		codeT5 & & & 98\% \\
 		\bottomrule
 	\end{tabular}
 	\label{tab:accuracy}
@@ -314,6 +314,60 @@ Finally, Table \ref{tab:chartaccuracy} shows the accuracy of nvBERT model at pre
 	\end{tabular}
 	\label{tab:chartaccuracy}
 \end{table}
+
+\subsubsection{CodeT5} The results from fine-tuning codeT5 model has been phenomenal, achieving a final accuracy of 98\%. Since the accuracy is already so high, we omit providing analysis by word types. Instead we would like to examine the success rate of the model by difficulty level of the query as defined in the original nvBench dataset, where a success is defined as a complete match of predict and label query. As shown in Table \ref{tab:codet5rate}, CodeT5 model consistently achieve high performance across difficulty levels, suggesting that the complexity of language and label query structure is not a significant limiting factor in its performance.
+
+\begin{table}
+	\caption{CodeT5 performance breakdown by difficulty level.}
+	\centering
+	\begin{tabular}{lccc}
+		\toprule
+		Hardness & Success & Failure & Success Rate \\
+		\midrule
+		Easy & 1451 & 147 & 91\% \\
+		Medium & 1869 & 233 & 89\% \\
+		Hard & 605 & 135 & 81\% \\
+		Extra Hard & 384 & 52 & 88\% \\
+		\bottomrule
+	\end{tabular}
+	\label{tab:codet5rate}
+\end{table}
+
+We further examine some of the cases where the codeT5 model fails to predict the label exactly:
+
+\begin{quote}
+\gray{Label}: mark bar data customer encoding x cust\_name y aggregate none acc\_bal transform filter cust\_name like \red{'\%a\%'} sort y desc
+\end{quote}
+
+\begin{quote}
+\gray{Prediction}: mark bar data customer encoding x cust\_name y aggregate none acc\_bal transform filter cust\_name like \red{'\%a'} sort y desc
+\end{quote}
+
+In the first example, the predicted vega zero query is missing a ``\%'' sign after ``\%a''.
+
+\begin{quote}
+\gray{Label}: mark bar data employees encoding x hire\_date y aggregate count hire\_date transform filter salary between 8000 and 12000 and commission\_pct != "null" or \red{department\_id != 40} sort y asc bin x by 'weekday
+\end{quote}
+
+\begin{quote}
+\gray{Prediction}: mark bar data employees encoding x hire\_date y aggregate count hire\_date transform filter salary between 8000 and 12000 and commission\_pct!= "null" or \red{department\_id!= 40} sort y asc bin x by weekday
+\end{quote}
+
+In the second example, a space is missing before ``!=''. We have systematically correctly these mistakes for our final success rate. Table \ref{tab:codet5error} shows the improvement of results.
+
+\begin{table}
+	\caption{CodeT5 success rate before and after error correction.}
+	\centering
+	\begin{tabular}{cc}
+		\toprule
+		Before Correction & After Correction \\
+		\midrule
+		83\% & 88\% \\
+		\bottomrule
+	\end{tabular}
+	\label{tab:codet5error}
+\end{table}
+
 
 \section{Discussion}
 
