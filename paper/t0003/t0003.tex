@@ -156,7 +156,7 @@ Finally, we evaluate the models one more time with a guide search algoirthm to p
 After running 5 epochs with learning rate 0.0005 and keeping the model version with the lowest validation loss, the test accuracy of the models are reported in Table \ref{tab:accuracy}. The accuracy of a model is defined as the probability of predicting the next word correctly given part of the label query.
 
 \begin{table} % Single column table
-	\caption{Model Test Accuracy.}
+	\caption{Model test accuracy.}
 	\centering
 	\begin{tabular}{lccc}
 		\toprule
@@ -191,7 +191,7 @@ Besides the overall accuracy difference, the general trend is that the accuracy 
 We next look at the accuracy of predicting the entire label query. The algorithm of guided search, as used by the original ncNet model, proceeds as follows: starting with the start of sentence token for the label, successively predict the top five candidates. Within the top five candidates, the top candidate is chosen unless it does not belong to the possible words for the current position being predicted, in which case the rest of the candidates are iterated over to find a suitable choice. The predict is counted as correct if the resulting predicted sentence matchs the label sentence completely. Table \ref{tab:guidedaccuracy} shows the results for each model. 
 
 \begin{table} % Single column table
-	\caption{Model Test Accuracy with Guided Search.}
+	\caption{Model test accuracy with guided search.}
 	\centering
 	\begin{tabular}{lccc}
 		\toprule
@@ -217,7 +217,7 @@ From looking at the results, it's immediately clear that the lower accuracy in t
 
 \begin{figure*}
 	\includegraphics[width=\linewidth]{loss_figure.png}
-	\caption{Train and Validation Loss of Models.}
+	\caption{Train and validation loss of models.}
 	\label{fig:loss}
 \end{figure*}
 
