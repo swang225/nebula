@@ -50,25 +50,31 @@ In this paper, we propose a new method of video actions data generation by means
 
 \section{Background}
 
-\subsubsection{Dataset} Several datasets exists currently for single action recognition, including UCF101\cite{Soomro:2012qr} and HMDB\cite{Kuehne11}. UCF101 dataset is a collection of youtube videos that contains 101 action categories with a total of 13320 videos, averaging 132 videos per category. Some of the categories in the dataset include ``Apply Eye Makeup'', ``archery'' and ``Frisbee catch''.
+\subsubsection{Dataset} Several data sets exist currently for single action recognition, including UCF101\cite{Soomro:2012qr} and HMDB\cite{Kuehne11}. UCF101 dataset is a collection of youtube videos that contains 101 action categories with a total of 13320 videos, averaging 132 videos per category. Some of the categories in the dataset include ``Apply Eye Makeup'', ``archery'' and ``Frisbee catch''.
 
-HMDB\cite{Kuehne11} is another dataset that aims to further the progress in understanding action recognition.  It contains 51 actions and a total of 7000 vidoe clips. The actions within the videos are broadly categorized into five types: general facial actions, facial actions with object manipulation, general body movements, body movements with object interaction and body movements for human interaction.
+HMDB\cite{Kuehne11} is another data set that aims to further the progress in understanding action recognition.  It contains 51 actions and a total of 7000 vidoe clips. The actions within the videos are broadly categorized into five types: general facial actions, facial actions with object manipulation, general body movements, body movements with object interaction and body movements for human interaction.
 
-Overtime larger datasets have been created for video action recognition tasks such as the kinetics dataset\cite{Smaira:2020qr}, where 700 classes of actions have been categoried, each with an average of 926 sample videos.
+Overtime larger data sets have been created for video action recognition tasks such as the kinetics dataset\cite{Smaira:2020qr}, where 700 classes of actions have been categoried, each with an average of 926 sample videos.
 
-More recently, spatio-temporally localized atomic visual actions datasets (AVA)\cite{Gu:2018qr} have also been introduced, where actions by multiple objects exist within the same video sample.
+More recently, spatio-temporally localized atomic visual actions data sets (AVA)\cite{Gu:2018qr} have also been introduced, where actions by multiple objects exist within the same video sample.
 
-\subsubsection{Action Recognition} As more and more datasets come into existence, models have been built to train and test on these datasets, including convolutional neural network, LSTM\cite{Carreira:2018qr} based encoder models and 3D neural networks that combines frames and optical flow information \cite{Carreira:2018qr}. More complex architectures for localized action recognitions have also been proposed\cite{Wu:2023qr}.
+\subsubsection{Action Recognition} As more and more data sets come into existence, models have been built to train and test on these data sets, including convolutional neural network, LSTM\cite{Carreira:2018qr} based encoder models and 3D neural networks that combines frames and optical flow information \cite{Carreira:2018qr}. More complex architectures for localized action recognitions have also been proposed\cite{Wu:2023qr}.
 
-\subsubsection{Bottlenecks} Although commendable progress has been made in the research of action understanding, many issues still hinder its progress. One of them is the quality of available datasets. The existing datasets are typically collected from video data sources and curated by human judges, this process introduces many variabilities in the quality and comprehensiveness of the sample data, and because these data are collected as they are available, often it is impossible to control for characteristics that are desired for particular research objectiveness. For example, it is often difficult to study the specific effects of object variation and orientation separately. Besides targeted research needs, it is often difficult to study hierarchies of categories. As an example, if we would like to conduct a research where we would like to first recognize the person in the image, and then the action performed by the person, then it would be very difficult to conduct such studies with the existing datasets.
+\subsubsection{Bottlenecks} Although commendable progress has been made in the research of action understanding, many issues still hinder its progress. One of them is the quality of available data sets. The existing data sets are typically collected from video data sources and curated by human judges, this process introduces many variabilities in the quality and comprehensiveness of the sample data, and because these data are collected as they are available, often it is impossible to control for characteristics that are desired for particular research objectiveness. For example, it is often difficult to study the specific effects of object variation and orientation separately. Besides targeted research needs, it is often difficult to study hierarchies of categories. As an example, if we would like to conduct a research where we would like to first recognize the person in the image, and then the action performed by the person, then it would be very difficult to conduct such studies with the existing data sets.
 
-The second issue is the quantity of available data, although kinetics dataset has attempted to address the issue of volume with larger number of samples, they are still only single action samples of variable qualities, making studies of localized actions and sequential action recogniton difficult.
+The second issue is the quantity of available data, although kinetics data set has attempted to address the issue of volume with larger number of samples, they are still only single action samples of variable qualities, making studies of localized actions and sequential action recogniton difficult.
 
-We hope that our new dataset could help address some of these issues and contribute to the progress of the study in action recognition.
+We hope that our new data set could help address some of these issues and contribute to the progress of the study in action recognition.
 
 \section{Data}
 
-\subsection{Data Generation} Our dataset is generated by a 3D simulation program developed in Unity that supports configurations for zoom, center offset, camera angle orientation and avatar styles. The amount of zoom applied to the camera typically varies from 50\% to 200\%, 100\% represents the default zoom amount. An offset could be applied to the x or y direction of the the camera relative to the target of the camera, the unit of this configuration is based on the simulation world space metric system (meters in world space).  The camera could also be rotated about the x and y axis relative to the target avatar, we typically set these configurations between -5 degrees to 90 degrees about the x axis and -90 degrees to 90 degrees about the y axis.
+\begin{figure}
+	\includegraphics[width=\linewidth]{simulation_engine.png}
+	\caption{Action simulation engine.}
+	\label{fig:simulationengine}
+\end{figure}
+
+\subsection{Data Generation} Our data set is generated by a 3D simulation program \ref{fig:simulationengine} developed in Unity that supports configurations for zoom, center offset, camera angle orientation and avatar styles. The amount of zoom applied to the camera typically varies from 50\% to 200\%, 100\% represents the default zoom amount. An offset could be applied to the x or y direction of the the camera relative to the target of the camera, the unit of this configuration is based on the simulation world space metric system (meters in world space).  The camera could also be rotated about the x and y axis relative to the target avatar, we typically set these configurations between -5 degrees to 90 degrees about the x axis and -90 degrees to 90 degrees about the y axis.
 
 The avatar character in the simulation could be configured with various hair, cloth and pants style. In our current iteration, there are 4 different styles for hair, cloth and pants respectively, for a total of 64 unique combinations.
 
@@ -83,7 +89,7 @@ The configurations of the three datasets are listed in the Table \ref{tab:dataco
 \begin{table} % Single column table
 	\caption{Data set configurations: zoom in percentage, offset in meters, angle in degrees.}
 	\centering
-	\begin{tabular}{l l l l r}
+	\begin{tabular}{lccc}
 		\toprule
 		Type & Easy & Medium & Hard  \\
 		\midrule
@@ -155,7 +161,7 @@ For every data set and model training, we split the sample data into three sets,
 \begin{table*} % Full width table (notice the starred environment)
 	\caption{Model results for each difficulty level and model/filter combination. Action column displays results for using action only as label, A+T column displays results for using action and action type combination as label.  }
 	\centering % Horizontally center the table
-	\begin{tabular}{C{0.1\linewidth} C{0.1\linewidth} C{0.05\linewidth} C{0.05\linewidth} C{0.05\linewidth} C{0.05\linewidth} C{0.05\linewidth} C{0.05\linewidth} C{0.05\linewidth} C{0.05\linewidth}}
+	\begin{tabular}{L{0.1\linewidth} L{0.1\linewidth} C{0.05\linewidth} C{0.05\linewidth} C{0.05\linewidth} C{0.05\linewidth} C{0.05\linewidth} C{0.05\linewidth} C{0.05\linewidth} C{0.05\linewidth}}
 		\toprule
 		\multicolumn{2}{c}{} & \multicolumn{2}{c}{Easy} & \multicolumn{2}{c}{Medium} & \multicolumn{2}{c}{Hard}\\
 		\cmidrule(r){3-8}
