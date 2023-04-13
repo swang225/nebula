@@ -8,6 +8,7 @@
 \usepackage{xcolor}
 \newcommand{\blue}[1]{\textcolor{blue}{#1}}
 \newcommand{\gray}[1]{\textcolor{gray}{#1}}
+\newcommand{\red}[1]{\textcolor{red}{#1}}
 
 \runninghead{Natural Language Models for Data Visualization} % A shortened article title to appear in the running head, leave this command empty for no running head
 
@@ -52,7 +53,7 @@ Previous research in this area has included explorations of transforming natural
 
 In this paper, we have used the nvBench as our train, validation and test dataset to create BERT encoder based multi-head attention transformer models and compare the performance of the new models with the performance of the ncNet model (also a sequence to sequence transformer model). Our goal is to explore the possibility of a generalized natural language to visualization process which the ability of the system to handle natural language inputs is not limited by the input training data. We have provided below the main results of our research and detailed description and analysis of the input data, model architecture and model performance.
 
-From our reseach, the BERT encoder based sequence to sequence transformer model was able to achieve an overall accuracy of 79\%, confirming our hypothesis of the possibility to leverage transferred learning of BERT models to data visualization tasks.
+From our reseach, the BERT encoder based sequence to sequence transformer model was able to achieve an overall accuracy of 79\%, confirming our hypothesis of the possibility to leverage transferred learning of BERT models to data visualization tasks. Applying pre-trained CodeT5 model realizes even more impressive results, achieving overall accuracy of 97\%.
 
 \section{Background}
 
@@ -157,19 +158,19 @@ After running 5 epochs with learning rate 0.0005 and keeping the model version w
 \begin{table} % Single column table
 	\caption{Model Test Accuracy.}
 	\centering
-	\begin{tabular}{l l l l r}
+	\begin{tabular}{lccc}
 		\toprule
 		Model & Query & Query+Chart & Overall  \\
 		\midrule
-		ncNet & 0.952 & 0.960 & 0.956 \\
-		ncNet w/o AF & 0.954 & 0.961 & 0.957  \\
+		ncNet & 95\% & 96\% & 96\% \\
+		ncNet w/o AF & 95\% & 96\% & 96\%  \\
 		\hline
-		nvBERT & 0.788 & 0.788 & 0.788 \\
-		nvBERT\_CNN &  0.788 & 0.788 & 0.788 \\
+		nvBERT & 79\% & 79\% & 79\% \\
+		nvBERT\_CNN &  79\% & 79\% & 79\% \\
 		\hline
-		nvncNetBERT & 0.887 & 0.893 & 0.890 \\
+		nvncNetBERT & 89\% & 89\% & 89\% \\
 		\hline
-		codeT5 & & & 0.97 \\
+		codeT5 & & & 97\% \\
 		\bottomrule
 	\end{tabular}
 	\label{tab:accuracy}
@@ -187,24 +188,24 @@ Besides the overall accuracy difference, the general trend is that the accuracy 
 
 \subsection{Guided Search Accuracy}
 
-We next look at the accuracy of predicting the entire label query. The algorithm of guided search, as used by the original ncNet model, proceeds as follows: starting with the start of sentence token for the label, successively predict the top five candidates. Within the top five candidates, the top candidate is chosen unless it does not belong to the possible words for the current position being predicted, in which case the rest of the candidates are iterated over to find a suitable choice. Table \ref{tab:guidedaccuracy} shows the results for each model. 
+We next look at the accuracy of predicting the entire label query. The algorithm of guided search, as used by the original ncNet model, proceeds as follows: starting with the start of sentence token for the label, successively predict the top five candidates. Within the top five candidates, the top candidate is chosen unless it does not belong to the possible words for the current position being predicted, in which case the rest of the candidates are iterated over to find a suitable choice. The predict is counted as correct if the resulting predicted sentence matchs the label sentence completely. Table \ref{tab:guidedaccuracy} shows the results for each model. 
 
 \begin{table} % Single column table
 	\caption{Model Test Accuracy with Guided Search.}
 	\centering
-	\begin{tabular}{l l l l r}
+	\begin{tabular}{lccc}
 		\toprule
 		Model & Query & Query+Chart & Overall  \\
 		\midrule
-		ncNet & 0.622 & 0.723 & 0.673 \\
-		ncNet w/o AF & 0.650 & 0.745 & 0.698  \\
+		ncNet & 62\% &72\% & 67\% \\
+		ncNet w/o AF & 65\% & 75\% & 70\%  \\
 		\hline
-		nvBERT & 0.0252 & 0.131 & 0.0780 \\
-		nvBERT\_CNN &  0.0195 & 0.119 & 0.0693 \\
+		nvBERT & 3\% & 13\% & 8\% \\
+		nvBERT\_CNN &  2\% & 12\% & 7\% \\
 		\hline
-		nvncNetBERT & 0.211 & 0.334 & 0.272 \\
+		nvncNetBERT & 21\% & 33\% & 27\% \\
 		\hline
-		codeT5 & & & 0.88 \\
+		codeT5 & & & 88\% \\
 		\bottomrule
 	\end{tabular}
 	\label{tab:guidedaccuracy}
@@ -222,13 +223,103 @@ From looking at the results, it's immediately clear that the lower accuracy in t
 
 The results of train and validation loss for ncNet, ncNet without attention forcing, nvBERT, nvBERT\_CNN and nvncNetBERT are shown for the first 5 epochs in \ref{fig:loss}. The BERT encoder models show much smaller drop in train loss from epoch to epoch, due to transfer learning that occurs. However the BERT encoder models do not show significant drop in validation loss, suggesting that most of fine-tuning has happened in the first epoch.
 
-\subsection{Sample analysis}
+\subsection{Sample Analysis}
 
-Show some examples of correct and incorrect predictions...
+\subsubsection{nvBERT} Given the large discrepancy between overall accuracy and the guided search accuracy due to the flaws of the respective metrics, we need a better understanding of the true performance of the new models with BERT encoders. One of the things to observe is that in the predicted query, many of the words are part of the template and rarely changes. These words need to be separated out because the correction prediction of them mostly requires the model to simply be position aware. As an example:
+
+\begin{quote}
+\gray{Query}: <N> Plot how many booking start date by grouped by booking start date as a bar graph , order Y in ascending order . </N> <C> \blue{mark} [T] \blue{data} apartment\_bookings \blue{ encoding} \red{x} [X] \red{y} \blue{aggregate} [AggFunction] [Y] \red{color} [Z] \blue{transform} \red{filter} [F] \red{group} [G] \red{bin} [B] \red{sort} [S] \red{topk} [K] </C> <D> apartment\_bookings <COL> booking\_start\_date </COL> <VAL> </VAL> </D>
+\end{quote}
+
+\begin{quote}
+\gray{Label}: \blue{mark} bar \blue{data} apartment\_bookings \blue{encoding} \red{x} booking\_start\_date \red{y} \blue{aggregate} count booking\_start\_date \blue{transform} \red{sort} \red{y} asc \red{bin} \red{x} by weekday <eos>
+\end{quote}
+
+Words such as ``mark'', ``data'', ``encoding'', ``aggregate'' and ``transform'' always appear in the label and in fixed positions, the model is able to predict them almost perfectly. Words that are also part of the template such as ``x'', ``y'', ``color'', ``filter'', ``group'', ``bin'', ``sort'' and ``topk'' may not occur in the label or may occur more than once, are harder to predict.
+
+Table \ref{tab:count} shows the count of words that are part of template vs non-template, on average, there are more template words than non-template words, which partially account for why word prediction accuracy is much higher than guided search accuracy.
+
+\begin{table}
+	\caption{Count of words that are template and non-template.}
+	\centering
+	\begin{tabular}{ lccc }
+		\toprule
+		Count & TPT & Non-TPT & Total  \\
+		\midrule
+		mean & 10.5 & 8.5 & 18.9 \\
+                  min & 6 & 4 & 12 \\
+                  max & 13 & 22 & 34 \\
+		\bottomrule
+	\end{tabular}
+	\label{tab:count}
+\end{table}
+
+Table \ref{tab:incorrectcount} shows the summary statistics for the count of incorrect predictions made by the nvBERT model on the easy template words, hard template words and non-template words. The rate of incorrect prediction is much higher for hard template words than easy template words, as expected. The third column shows the statics for incorrect prediction of non-template words, curiously the minimum of incorrect prediction is 1, which indicates that every prediction has at least one incorrectly predicted word, yet the guided search did result in completely correct predictions. The cause behind this apparent discrepancy is that for the guided search, predicted words are check for whether it is possible for it to occupy the position. Below shows an example:
+
+\begin{table}
+	\caption{Incorrect prediction for easy template, hard template, total template and non-template prediction count.}
+	\centering
+	\begin{tabular}{lcccc}
+		\toprule
+		Incorrect & Easy & Hard & TPT & Non-TPT  \\
+		\midrule
+		mean & 0 & 0.6 & 0.6 & 3.4 \\
+                  min & 0 & 0 & 0 & 1 \\
+                  max & 1 & 4 & 4 & 12 \\
+		\bottomrule
+	\end{tabular}
+	\label{tab:incorrectcount}
+\end{table}
+
+\begin{quote}
+\gray{Query}: <N> List all the possible ways to get to attractions , together with the number of attractions accessible by these methods in a bar chart , and sort names in asc order please . </N> <C> mark [T] data tourist\_attractions encoding x [X] y aggregate [AggFunction] [Y] color [Z] transform filter [F] group [G] bin [B] sort [S] topk [K] </C> <D> tourist\_attractions <COL> name how\_to\_get\_there </COL> <VAL> walk bus </VAL> </D>
+\end{quote}
+
+\begin{quote}
+\gray{Label}: mark bar data \red{tourist\_attractions} encoding x how\_to\_get\_there y aggregate count how\_to\_get\_there transform group x sort x asc <eos>
+\end{quote}
+
+\begin{quote}
+\gray{Prediction}: mark bar data \red{employees} encoding x how\_to\_get\_there y aggregate count how\_to\_get\_there transform group x sort x asc <eos>
+\end{quote}
+
+Although the prediction has incorrectly predicted ``employees'' instead of ``tourist\_attractions'', ``employees'' is not the name of the table under consideration, therefore guided search chose the word that matchs the table name instead, resulting in a correct prediction.
+
+Table \ref{tab:accuracybreakdown} shows the breakdown of nvBERT model prediction accuracy by category. As expected, template words prediction accuracy is much higher than non-template words.  
+
+\begin{table}
+	\caption{nvBERT prediction accuracy breakdown.}
+	\centering
+	\begin{tabular}{ccccc }
+		\toprule
+		Easy & Hard & TPT & Non-TPT & Total  \\
+		\midrule
+		100\% & 89\% & 94\% & 60\% & 79\% \\
+		\bottomrule
+	\end{tabular}
+	\label{tab:accuracybreakdown}
+\end{table}
+
+Finally, Table \ref{tab:chartaccuracy} shows the accuracy of nvBERT model at predicting the chart type, ``arc'', ``bar'', ``line'' or ``point''. The accuracy is broken down by whether the chart type is already provided by the source query, interestingly, providing chart type in source query does not improve the accuracy of predicting chart type, which is also reflected in Table \ref{tab:accuracy}. However, the provided chart type does help guided search to determine whether the predicted chart type is valid or not, thereby improving the guided search accuracy \ref{tab:guidedaccuracy}.
+
+\begin{table}
+	\caption{nvBERT chart type prediction accuracy breakdown.}
+	\centering
+	\begin{tabular}{ccccc}
+		\toprule
+		Query & Query+Chart  \\
+		\midrule
+		19\% & 19\% \\
+		\bottomrule
+	\end{tabular}
+	\label{tab:chartaccuracy}
+\end{table}
 
 \section{Discussion}
 
-Discuss how our tests demonstrated the potential of using BERT and other generalized language model for this problem...
+Through our research and analysis, we have demonstrated the potential of transfer learning through the use of BERT model as encoder for natural language to visualization tasks, specifically applied to the nvBench dataset. With the result of CodeT5 model trained and tested on the nvBench dataset we see that the problem could be adequately modeled as a natural language to code translation problem. With more sophisticated architecture and more comprehensive data visualization language, it is clear that natural language to data visualization translation could be done very effectively and in a general manner with existing large language models.
+
+Of course, there are still many areas remain to be explored. First, a more generic visualization language needs to be developed to accomodate the more complex requests, the design of this language should be guided by the effectiveness with which it could be predicted by language models. Second, more database design should take into account the need for visualization, and integrate machine learning translation as part of the research and development process. We hope our research would contribute to the progress of these initiatives.
 
 %----------------------------------------------------------------------------------------
 %	 REFERENCES
