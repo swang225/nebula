@@ -169,10 +169,11 @@ After running 5 epochs with learning rate 0.0005 and keeping the model version w
 		\hline
 		nvBERT & 79\% & 79\% & 79\% \\
 		nvBERT\_CNN &  79\% & 79\% & 79\% \\
-		\hline
 		nvncNetBERT & 89\% & 89\% & 89\% \\
 		\hline
-		codeT5 & & & 98\% \\
+		codeT5 w/o TPT & 97\% & n/a & 97\% \\
+		codeT5 & 97\% & 97\% & 97\% \\
+		codeT5 Large & 98\% & 98\% & 98\% \\
 		\bottomrule
 	\end{tabular}
 	\label{tab:accuracy}
@@ -180,13 +181,15 @@ After running 5 epochs with learning rate 0.0005 and keeping the model version w
 
 The table shows three columns, the accuracy of the models on queries where chart type is not specified (Query), the accuracy of the models on queries where chart type is specified (Query+Chart) and the overall accuracy (Overall).
 
-As we can see from the results, the origina ncNet models produced test accuracies in excess of 95\%. While the BERT based transformer models were able to achieve close to 80\% accuracy. This is attributable to the fact that the BERT model contains a much larger vocabulary than the ncNet model trained only on the vocabulary of tokens present in the dataset.
+As we can see from the results, the original ncNet models produced test accuracies in excess of 95\%. While the BERT based transformer models were able to achieve close to 80\% accuracy. This is attributable to the fact that the BERT model contains a much larger vocabulary than the ncNet model trained only on the vocabulary of tokens present in the dataset.
 
 Further more, the removal of attention forcing in the ncNet model does not appear to affect the test accuracy, suggesting that its absence in nvBERT models had no bearing on the accuracy results of the nvBET models. The accuracies of nvBERT models with and without convolutional layers does not appear to affect the accuracy at all, suggesting minimal impact of the convolutional layers.
 
 Finally the combined ncNet and BERT encoder produced results that improved unpon the nvBERT only models, suggesting that were a model able to combine the ncNET and BERT encoder while remaining generalizable, the results would improve along with the benefits of transfer learning.
 
-Besides the overall accuracy difference, the general trend is that the accuracy for query only tests are slightly lower than accuracy for query and chart type tests. This is expected since the query only tests require the model to predict an additional field. However, given that the accuracy differences are small, the chart type prediction is generally accurate.
+CodeT5 models achieved superior results across the board, surpassing both the original ncNet model as well as the BERT encoder intergrated models. What is more exciting is the fact that, even without template as input, codeT5 models are still able to achieve comparable results.
+
+Besides the overall accuracy difference, the general trend is that the accuracy for ``query only tests are slightly'' lower than accuracy for ``query and chart type'' tests. This is expected since the query only tests require the model to predict an additional field. However, given that the accuracy differences are small, the chart type prediction is generally accurate.
 
 \subsection{Guided Search Accuracy}
 
@@ -204,16 +207,19 @@ We next look at the accuracy of predicting the entire label query. The algorithm
 		\hline
 		nvBERT & 3\% & 13\% & 8\% \\
 		nvBERT\_CNN &  2\% & 12\% & 7\% \\
-		\hline
 		nvncNetBERT & 21\% & 33\% & 27\% \\
 		\hline
-		codeT5 & & & 88\% \\
+		codeT5 w/o TPT & 83\% & n/a & 83\% \\
+		codeT5 & 86\% & 87\% & 86\% \\
+		codeT5 Large & 89\% & 88\% & 88\% \\
 		\bottomrule
 	\end{tabular}
 	\label{tab:guidedaccuracy}
 \end{table}
 
 From looking at the results, it's immediately clear that the lower accuracy in the BERT based models are amplified through the guided search process, resulting in a low overall accuracy of 7.8\%. This effect also shows up in the difference between query only and query with chart type accuracy, where the small difference in Table \ref{tab:accuracy} becomes much larger in Table \ref{tab:guidedaccuracy}.
+
+The codeT5 models again show great results. However, the model trained without template now shows reduced accuracy, suggesting that template input helps the guided search to improve the final prediction results.
 
 \subsection{Sample Analysis}
 
