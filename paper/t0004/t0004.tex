@@ -151,6 +151,8 @@ Each frame extracted from the video as 256X256X3 pixel RBG image, then converted
 
 \subsubsection{Scale-Invariant feature transform} We compute two types of SIFT descriptors, key points with size and key points without size, in our models, we have opted to used the key points with size in our image filters.
 
+\subsubsection{K-Mean Clustering} We apply K-Mean clustering on the outputs of SIFT features to group similar features and reduce dimensionality. We have opted to use 60 clusters.
+
 \subsection{Classifier}
 
 \subsubsection{Support Vector Machine} We use the support vector classification directly from Scikit-Learn with the default parameters: 1.0 for regularization, radial basis function as kernel and maximum iterations of 50. 
@@ -196,9 +198,9 @@ For every data set and model training, we split the sample data into three sets,
 		Logistic & HOG|PCA & 55\% & 21\% & 34\% & 10\% & - & - \\
 		GBT & HOG|PCA & 85\% & 46\% & 30\% & 5\% & - & - \\
 		\hline
-		SVM & SIFT & 50\% & 43\% & 34\% & 28\% & 16\% & 9\% \\ 
-   	   	Logistic & SIFT & 70\% & 46\% & 53\% & 30\% & 33\% & 13\% \\
-   	   	GBT & SIFT & 71\% & 44\% & 56\% & 27\% & 32\% & 12\% \\ 
+		SVM & SIFT|KMean & 50\% & 43\% & 34\% & 28\% & 16\% & 9\% \\ 
+   	   	Logistic & SIFT|KMean & 70\% & 46\% & 53\% & 30\% & 33\% & 13\% \\
+   	   	GBT & SIFT|KMean & 71\% & 44\% & 56\% & 27\% & 32\% & 12\% \\ 
 		\hline
 		CNN & - & - & - & 100\% & 98\% & 95\% & 92\% \\
 		\bottomrule
@@ -208,13 +210,34 @@ For every data set and model training, we split the sample data into three sets,
 
 Table \ref{tab:modelres} shows the results from training and testing combinations of 4 models and 3 filters. We start out with the easy level data set, training 3 models (SVM, Logistic, GBT) with no filters except downsizing the input images by a further 80\%. The results show that gradient boosting tree generates the best performance out of the three models. However the results of SVM and GBT are comparable with action and action type label combination. Three more sets of models are trained on the easy level data set with the PCA filter, the HOG plus PCA filter combination and the SIFT filter. The results show steady improvements, where HOG plus PCA filter with SVM model achieving the best accuracy for action plus action type labels, although the SIFT filtered models perform better on average.
 
-For the medium set, again we perform the same training and testing for all of the classic models, but this time also including the CNN model. As shown in the table, the CNN model easily outperforms all other models, achieving 98\% accuracy on the action plus action type labels. Second best performing models are the SIFT feature based models, achieving 28\% accuracy on average for action plus action type labels.
-
-
+For the medium set, again we perform the same training and testing for all of the classic models, but this time also including the CNN model. As shown in the table, the CNN model easily outperforms all other models, achieving 98\% accuracy on the action plus action type labels. Second best performing models are the SIFT feature based models, achieving 28\% accuracy on average for action plus action type labels. Looking at the data, a general trend appears: SIFT filtered models models general performs better. This is not surprising, because one of the key variations in our samples is the orientation of cameras, SIFT features should be able to reduce the complexity due to these variations to a great extent.
 
 \section{Model Analysis}
 
-placeholder
+\subsection{Hyperparameter Search}
+
+Although CNN model produces superior performance by a large margin, The models with SIFT plus K-Mean clustered features do show great promise. Therefore we perform a hyperparameter search for these models. For this exercise, we use the ``hard'' level validation data set to optimize the model parameters, Table \ref{tab:hsres} shows the results. Interesting to note is that SVM performs much better after hyper-parameter search, mainly benefiting from gamma parameter change. Logistic Regression results does not change at all, while GBT results becomes worse, presumably from using a much smaller set of data to estimate the parameters.
+
+\subsection{Error Analysis}
+
+\subsubsection{CNN} We perform a detailed analysis of the source of error in the hard level dataset based on the results we obtain from the CNN model.
+
+\begin{table*} % Full width table (notice the starred environment)
+	\caption{Best SIFT|KMean filtered model after hyperparameter search.  }
+	\centering % Horizontally center the table
+	\begin{tabular}{L{0.1\linewidth} L{0.1\linewidth} C{0.05\linewidth} C{0.05\linewidth} R{0.5\linewidth}}
+		\toprule
+		\multicolumn{2}{c}{} &  \multicolumn{2}{c}{Hard} & \multicolumn{1}{c}{} \\
+		\cmidrule(r){3-4}
+		Model & Filter & Action & A+T & Params \\
+		\midrule
+		SVM & SIFT|KMean & 40\% & 16\% & C=1 gamma=0.01 kernel=rbf \\ 
+   	   	Logistic & SIFT|KMean & 33\% & 13\% & C=0.03 penalty=l2 solver=newton-cg \\
+   	   	GBT & SIFT|KMean & 33\% & 10\% & learning\_rate=0.1 max\_depth=2 n\_estimators=50 \\
+		\bottomrule
+	\end{tabular}
+	\label{tab:hsres}
+\end{table*}
 
 \section{Discussion}
 
