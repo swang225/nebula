@@ -5,6 +5,8 @@
 	twoside, % Two side traditional mode where headers and footers change between odd and even pages, comment this option to make them fixed
 ]{t0003}
 
+\usepackage{float}
+\usepackage[title]{appendix}
 \usepackage{xcolor}
 \newcommand{\blue}[1]{\textcolor{blue}{#1}}
 \newcommand{\gray}[1]{\textcolor{gray}{#1}}
@@ -385,29 +387,37 @@ Of course, there are still many areas remain to be explored. First, a more gener
 
 %----------------------------------------------------------------------------------------
 
-\begin{figure*}
+\onecolumn
+\begin{appendices}
+\centering\section*{APPENDIX}
+
+\textbf{Model Architectures}
+
+\begin{figure}[H]
 	\includegraphics[width=\linewidth]{ncnet_architecture.png}
 	\caption{Architecture of ncNet model.}
 	\label{fig:ncnet}
-\end{figure*}
+\end{figure}
 
 
-\begin{figure*}
+\begin{figure}[H]
 	\includegraphics[width=\linewidth]{ncbert_architecture.png}
 	\caption{Architecture of ncBERT model.}
 	\label{fig:ncbert}
-\end{figure*}
+\end{figure}
 
-\begin{figure*}
+\begin{figure}[H]
 	\includegraphics[width=\linewidth]{ncbert_cnn_architecture.png}
 	\caption{Architecture of ncBERT\_CNN model.}
 	\label{fig:ncbertcnn}
-\end{figure*}
+\end{figure}
 
-\begin{figure*}
+\begin{figure}[H]
 	\includegraphics[width=\linewidth]{ncnetbert_architecture.png}
 	\caption{Architecture of ncNetBERT model.}
 	\label{fig:ncnetbert}
-\end{figure*}
+\end{figure}
+
+\end{appendices}
 
 \end{document}
