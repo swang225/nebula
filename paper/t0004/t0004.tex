@@ -84,7 +84,7 @@ We hope that our new data set could help address some of these issues and contri
 
 \begin{figure}
 	\includegraphics[width=\linewidth]{appearance_fig2.png}
-	\caption{Appearance styles. First 4 figures show possible hairstyles. Second 4 figures show possible cloth patterns. Third 4 figures shows possible pants patterns.}
+	\caption{Appearance styles. First set of 4 figures show possible hairstyles. Second set of 4 figures show possible cloth patterns. Third set of 4 figures shows possible pants patterns.}
 	\label{fig:appearancefig}
 \end{figure}
 
@@ -175,7 +175,6 @@ For every data set and model training, we split the sample data into three sets,
 
 \section{Results}
 
-
 \begin{table*} % Full width table (notice the starred environment)
 	\caption{Model results for each difficulty level and model/filter combination. Action column displays results for using action only as label, A+T column displays results for using action and action type combination as label.  }
 	\centering % Horizontally center the table
@@ -185,9 +184,9 @@ For every data set and model training, we split the sample data into three sets,
 		\cmidrule(r){3-8}
 		Model & Filter & Action & A+T & Action & A+T & Action & A+T \\
 		\midrule
-		SVM & Downsize & 37\% & 29\% & - & - & - & - \\
-		Logistic & Downsize & 43\% & 16\% & - & - & - & - \\
-		GBT & Downsize & 71\% & 29\% & - & - & - & - \\
+		SVM & Downsize & 37\% & 29\% & 15\% & 5\% & - & - \\
+		Logistic & Downsize & 43\% & 16\% & 21\% & 6\% & - & - \\
+		GBT & Downsize & 71\% & 29\% & 61\% & 14\% & - & - \\
 		\hline
 		SVM & PCA & 48\% & 42\% & 15\% & 6\% & - & - \\
 		Logistic & PCA & 44\% & 17\% & 23\% & 6\% & - & - \\
@@ -197,14 +196,25 @@ For every data set and model training, we split the sample data into three sets,
 		Logistic & HOG|PCA & 55\% & 21\% & 34\% & 10\% & - & - \\
 		GBT & HOG|PCA & 85\% & 46\% & 30\% & 5\% & - & - \\
 		\hline
-		SVM & SIFT & 50\% & 43\% & - & - & - & - \\ 
-   	   	Logistic & SIFT & 70\% & 46\% & - & - & - & - \\
-   	   	GBT & SIFT & 71\% & 44\% & - & - & - & - \\ 
+		SVM & SIFT & 50\% & 43\% & 34\% & 28\% & 16\% & 9\% \\ 
+   	   	Logistic & SIFT & 70\% & 46\% & 53\% & 30\% & 33\% & 13\% \\
+   	   	GBT & SIFT & 71\% & 44\% & 56\% & 27\% & 32\% & 12\% \\ 
 		\hline
 		CNN & - & - & - & 100\% & 98\% & 95\% & 92\% \\
 		\bottomrule
 	\end{tabular}
+	\label{tab:modelres}
 \end{table*}
+
+Table \ref{tab:modelres} shows the results from training and testing combinations of 4 models and 3 filters. We start out with the easy level data set, training 3 models (SVM, Logistic, GBT) with no filters except downsizing the input images by a further 80\%. The results show that gradient boosting tree generates the best performance out of the three models. However the results of SVM and GBT are comparable with action and action type label combination. Three more sets of models are trained on the easy level data set with the PCA filter, the HOG plus PCA filter combination and the SIFT filter. The results show steady improvements, where HOG plus PCA filter with SVM model achieving the best accuracy for action plus action type labels, although the SIFT filtered models perform better on average.
+
+For the medium set, again we perform the same training and testing for all of the classic models, but this time also including the CNN model. As shown in the table, the CNN model easily outperforms all other models, achieving 98\% accuracy on the action plus action type labels. Second best performing models are the SIFT feature based models, achieving 28\% accuracy on average for action plus action type labels.
+
+
+
+\section{Model Analysis}
+
+placeholder
 
 \section{Discussion}
 
