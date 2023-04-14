@@ -129,19 +129,19 @@ The ncNet\cite{Luo:2022qr} model is a sequence to sequence multi-head transforme
 
 One important fact to note is that the ncNet model uses all words occuring in the training, testing and validation dataset as vocabulary. Therefore letting the possibility of natural language query inputs.
 
-We also remove the attention mask (referred to as attention forcing in Luo 2022\cite{Luo:2022qr}) used in ncNet to create another baseline for our experiments, since attention mask are not applicable to our models.
+We also removed the attention mask (referred to as attention forcing in Luo 2022\cite{Luo:2022qr}) used in ncNet to create another baseline for our experiments, since attention mask are not applicable to our models.
 
 \subsubsection{BERT Model}
 
-We then proceed to replace the ncNet encoder with the BERT model encoder, as shown in Figure \ref{fig:ncbert}. Because the BERT model is pre-trained with a much larger vocabulary, the hope is that this knowledge would transfer to the new model, ncBERT, once we fine tune it. We train an additional BERT encoder model with convolutional layers added to the BERT embeddings, in order to distill relevant information from BERT model embeddings before decoding, as the BERT embedding has a much larger dimension that may contain information irrelevant to the data visualization task. The convolutional layers incorporated model is shown in Figure \ref{fig:ncbertcnn} .
+We then proceeded to replace the ncNet encoder with the BERT model encoder, as shown in Figure \ref{fig:ncbert}. Because the BERT model was pre-trained with a much larger vocabulary, the hope was that this knowledge would transfer to the new model, ncBERT, once we fine-tuned it. We trained an additional BERT encoder model with convolutional layers added to the BERT embeddings, in order to distill relevant information from BERT model embeddings before decoding, as the BERT embedding has a much larger dimension that may contain information irrelevant to the data visualization task. The convolutional layers incorporated model is shown in Figure \ref{fig:ncbertcnn} .
 
 \subsubsection{Combining ncNet and BERT Model}
 
-Furthermore, we create an encoder combining both the ncNet and BERT encoders, we achieve this by reshaping the embeddings from BERT to the same dimension as ncNet encoder and concatenating them together. The architecture of the model can be found in Figure \ref{fig:ncnetbert}. The motivation of creating this model is to analyze the effect of BERT embedding on the baseline model and explore the potential of enhancing the original encoder without completely replacing it. However, the implication of this approach is that words that does not exist in the original ncNet encoder still could not be used, further research needs to be done to remove this limitation. 
+Furthermore, we created an encoder combining both the ncNet and BERT encoders, we achieved this by reshaping the embeddings from BERT to the same dimension as ncNet encoder and concatenating them together. The architecture of the model could be found in Figure \ref{fig:ncnetbert}. The motivation of creating this model was to analyze the effect of BERT embedding on the baseline model and explore the potential of enhancing the original encoder without completely replacing it. However, the implication of this approach was that words that did not exist in the original ncNet encoder still could not be used, further research needs to be done to remove this limitation. 
 
 \subsubsection{CodeT5}
 
-Finally, we have used the pre-trained CodeT5 model to fine-tune on the nvBench dataset. The results are very encouraging, where we achieved 98\% prediction accuracy and 88\% guided search accuracy.
+Finally, a series of experiments were conducted by fine-tuning two different families of the pre-trained T5 model on the nvBench dataset. The first set of models was conducted using variations of the original T5 model \cite{Raffel:2020qr} by Raffel et al. and the second set of experiments was based on the Code-T5 model family \cite{Yue:2021qr2} by Wang et al., which is a variation of the T5 model pre-trained for code specific tasks. The experiments included using models of different parameter sizes and modifying the input by whether including or not, the query templates along with the input NL request. The results are very encouraging, where we achieved 98\% prediction accuracy and 88\% guided search accuracy using the “large” (700M parameter) version of the CodeT5 model and using the same input sequence as the other models which included both the template and the NL request.
 
 \subsection{Evaluation}
 
@@ -214,16 +214,6 @@ We next look at the accuracy of predicting the entire label query. The algorithm
 \end{table}
 
 From looking at the results, it's immediately clear that the lower accuracy in the BERT based models are amplified through the guided search process, resulting in a low overall accuracy of 7.8\%. This effect also shows up in the difference between query only and query with chart type accuracy, where the small difference in Table \ref{tab:accuracy} becomes much larger in Table \ref{tab:guidedaccuracy}.
-
-\subsection{Training and Loss}
-
-\begin{figure*}
-	\includegraphics[width=\linewidth]{loss\_figure.png}
-	\caption{Train and validation loss of models.}
-	\label{fig:loss}
-\end{figure*}
-
-The results of train and validation loss for ncNet, ncNet without attention forcing, nvBERT, nvBERT\_CNN and nvncNetBERT are shown for the first 5 epochs in \ref{fig:loss}. The BERT encoder models show much smaller drop in train loss from epoch to epoch, due to transfer learning that occurs. However the BERT encoder models do not show significant drop in validation loss, suggesting that most of fine-tuning has happened in the first epoch.
 
 \subsection{Sample Analysis}
 
@@ -317,7 +307,7 @@ Finally, Table \ref{tab:chartaccuracy} shows the accuracy of nvBERT model at pre
 	\label{tab:chartaccuracy}
 \end{table}
 
-\subsubsection{CodeT5} The results from fine-tuning codeT5 model has been phenomenal, achieving a final accuracy of 98\%. Since the accuracy is already so high, we omit providing analysis by word types. Instead we would like to examine the success rate of the model by difficulty level of the query as defined in the original nvBench dataset, where a success is defined as a complete match of predict and label query. As shown in Table \ref{tab:codet5rate}, CodeT5 model consistently achieve high performance across difficulty levels, suggesting that the complexity of language and label query structure is not a significant limiting factor in its performance.
+\subsubsection{CodeT5} For inference the standard model, decoder was used. Even though certain words such as table names and available column choices were encouraged via including them with the model input, no output tokens were forced. With this in mind the results from fine-tuning the CodeT5 model has been phenomenal, achieving a final token accuracy of 98\%.  The model showed a good ability to predict the general structure of the query with a 96\% success rate predicting query keywords (i.e. “count”, “group”, “transform”, etc.) and in 93\% of the cases, was able to correctly identify the column names.  A results review shows that in the majority of the cases, the error was semantic or abbreviation related. For example, for a label column name of `market\_val` the model would predict `market\_value`. In other cases the error was more related to the way the question was asked and the column name. For instance the model would predict “profit” instead of “profit\_dollars” because the question would ask for profits without mentioning dollars.  
 
 \begin{table}
 	\caption{CodeT5 performance breakdown by difficulty level.}
@@ -335,27 +325,7 @@ Finally, Table \ref{tab:chartaccuracy} shows the accuracy of nvBERT model at pre
 	\label{tab:codet5rate}
 \end{table}
 
-We further examine some of the cases where the codeT5 model fails to predict the label exactly:
-
-\begin{quote}
-\gray{Label}: mark bar data customer encoding x cust\_name y aggregate none acc\_bal transform filter cust\_name like \red{'\%a\%'} sort y desc
-\end{quote}
-
-\begin{quote}
-\gray{Prediction}: mark bar data customer encoding x cust\_name y aggregate none acc\_bal transform filter cust\_name like \red{'\%a'} sort y desc
-\end{quote}
-
-In the first example, the predicted vega zero query is missing a ``\%'' sign after ``\%a''.
-
-\begin{quote}
-\gray{Label}: mark bar data employees encoding x hire\_date y aggregate count hire\_date transform filter salary between 8000 and 12000 and commission\_pct != "null" or \red{department\_id != 40} sort y asc bin x by 'weekday
-\end{quote}
-
-\begin{quote}
-\gray{Prediction}: mark bar data employees encoding x hire\_date y aggregate count hire\_date transform filter salary between 8000 and 12000 and commission\_pct!= "null" or \red{department\_id!= 40} sort y asc bin x by weekday
-\end{quote}
-
-In the second example, a space is missing before ``!=''. We have systematically correctly these mistakes for our final success rate. Table \ref{tab:codet5error} shows the improvement of results.
+When comparing exact query matches as shown in Table \ref{tab:codet5rate}, the CodeT5 model consistently achieved high performance across difficulty levels, suggesting that the complexity of language and label query structure is not a significant limiting factor in its performance. A quick examination of the results show that in many of the cases the errors were systemic in nature and could easily be corrected by a series of logical filters. Some of these errors involved unmatched `\%` signs which are used for wildcards. For instance, to match values with the letter “a” the pattern would be `\%a\%`. The other most common error involved a lack of a white-space preceding the unequal operator `!=`. Please refer to the appendix for examples. In fact, fixing this one error improved the query accuracy from 83\% to 88\% as can be seen in Table \ref{tab:codet5error}. The rest of the errors were more nuanced in nature and involved commonly being unable to correctly predict the transform sections which tended to be the most complex. In this area the CodeT5 model only achieved a 90\% success rate.
 
 \begin{table}
 	\caption{CodeT5 success rate before and after error correction.}
@@ -369,7 +339,6 @@ In the second example, a space is missing before ``!=''. We have systematically 
 	\end{tabular}
 	\label{tab:codet5error}
 \end{table}
-
 
 \section{Discussion}
 
@@ -387,11 +356,12 @@ Of course, there are still many areas remain to be explored. First, a more gener
 
 %----------------------------------------------------------------------------------------
 
-\onecolumn
+\clearpage
 \begin{appendices}
-\centering\section*{APPENDIX}
 
-\textbf{Model Architectures}
+\section*{APPENDIX}
+
+\subsection{Model Architectures}
 
 \begin{figure}[H]
 	\includegraphics[width=\linewidth]{ncnet_architecture.png}
@@ -417,6 +387,40 @@ Of course, there are still many areas remain to be explored. First, a more gener
 	\caption{Architecture of ncNetBERT model.}
 	\label{fig:ncnetbert}
 \end{figure}
+
+\subsection{CodeT5 Error Examples}
+
+We further examine some of the cases where the codeT5 model fails to predict the label exactly:
+
+\begin{quote}
+\gray{Label}: mark bar data customer encoding x cust\_name y aggregate none acc\_bal transform filter cust\_name like \red{'\%a\%'} sort y desc
+\end{quote}
+
+\begin{quote}
+\gray{Prediction}: mark bar data customer encoding x cust\_name y aggregate none acc\_bal transform filter cust\_name like \red{'\%a'} sort y desc
+\end{quote}
+
+In the first example, the predicted vega zero query is missing a ``\%'' sign after ``\%a''.
+
+\begin{quote}
+\gray{Label}: mark bar data employees encoding x hire\_date y aggregate count hire\_date transform filter salary between 8000 and 12000 and commission\_pct != "null" or \red{department\_id != 40} sort y asc bin x by 'weekday
+\end{quote}
+
+\begin{quote}
+\gray{Prediction}: mark bar data employees encoding x hire\_date y aggregate count hire\_date transform filter salary between 8000 and 12000 and commission\_pct!= "null" or \red{department\_id!= 40} sort y asc bin x by weekday
+\end{quote}
+
+In the second example, a space is missing before ``!=''. We have systematically correctly these mistakes for our final success rate. Table \ref{tab:codet5error} shows the improvement of results.
+
+\subsection{Training and Loss}
+
+\begin{figure*}
+	\includegraphics[width=\linewidth]{loss\_figure.png}
+	\caption{Train and validation loss of models.}
+	\label{fig:loss}
+\end{figure*}
+
+The results of train and validation loss for ncNet, ncNet without attention forcing, nvBERT, nvBERT\_CNN and nvncNetBERT are shown for the first 5 epochs in \ref{fig:loss}. The BERT encoder models show much smaller drop in train loss from epoch to epoch, due to transfer learning that occurs. However the BERT encoder models do not show significant drop in validation loss, suggesting that most of fine-tuning has happened in the first epoch.
 
 \end{appendices}
 
