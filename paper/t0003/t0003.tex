@@ -79,7 +79,7 @@ Visualize \blue{BAR} \gray{SELECT JOB\_ID , SUM(MANAGER\_ID) FROM employees WHER
 	\label{fig:visualization}
 \end{figure}
 
-In this example, the chart type is ``PIE'', followed by the SQL statement for data retrieval. Figure \ref{fig:visualization} shows the rendering result of the query.
+In this example, the chart type is ``BAR'', followed by the SQL statement for data retrieval. Figure \ref{fig:visualization} shows the rendering result of the query.
 
 The example visualization query is mapped to several natural language queries, from which we train our models:
 
@@ -183,7 +183,7 @@ We next look at the accuracy of predicting the entire label query. The algorithm
 		\toprule
 		Model & Query & Query+Chart & Overall \\
 		\midrule
-		ncNet & 62\% &72\% & 67\% \\
+		ncNet (baseline) & 62\% &72\% & 67\% \\
 		ncNet w/o AF & 65\% & 75\% & 70\% \\
 		\hline
 		nvBERT & 3\% & 13\% & 8\% \\
@@ -294,7 +294,7 @@ Finally, Table \ref{tab:chartaccuracy} shows the accuracy of the nvBERT model at
 	\label{tab:chartaccuracy}
 \end{table}
 
-\subsubsection{CodeT5} For inference of the standard model, a decoder was used. Even though certain words such as table names and available column choices were encouraged via including them with the model input, no output tokens were forced. With this in mind the results from fine-tuning the CodeT5 model has been phenomenal, achieving a final token accuracy of 98\%. The model showed a good ability to predict the general structure of the query with a 96\% success rate predicting query keywords (i.e. “count”, “group”, “transform”, etc.) and in 93\% of the cases, was able to correctly identify the column names. A results review shows that in the majority of the cases, the error was semantic or abbreviation related. For example, for a label column name of `market\_val` the model would predict `market\_value`. In other cases the error was more related to the way the question was asked and the column name. For instance the model would predict “profit” instead of “profit\_dollars” because the question would ask for profits without mentioning dollars.
+\subsubsection{CodeT5} For inference, the standard model decoder was used. Even though certain words such as table names and available column choices were encouraged via including them with the model input, no output tokens were forced. With this in mind the results from fine-tuning the CodeT5 model has been phenomenal, achieving a final token accuracy of 98\%. The model showed a good ability to predict the general structure of the query with a 96\% success rate predicting query keywords (i.e. “count”, “group”, “transform”, etc.) and in 93\% of the cases, was able to correctly identify the column names. A results review shows that in the majority of the cases, the error was semantic or abbreviation related. For example, for a label column name of `market\_val` the model would predict `market\_value`. In other cases the error was more related to the way the question was asked and the column name. For instance the model would predict “profit” instead of “profit\_dollars” because the question would ask for profits without mentioning dollars.
 
 \begin{table}
 	\caption{CodeT5 performance breakdown by difficulty level.}
