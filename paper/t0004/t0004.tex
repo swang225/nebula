@@ -261,7 +261,7 @@ Although CNN model produced superior performance by a large margin, The models w
 
 Figure \ref{fig:trianglecnn} shows the incorrect predictions made by the CNN model on the ``triangle\_3'' action and action type combination. Observing these incorrect observations reveal several causes for the errors in prediction. First some angles are difficult for the model to determine what action type is performed as in image 2 of Figure \ref{fig:trianglecnn}. Some of the images simply doesn't contain enough of the avatar to result in an accurate prediction, such as image 7, although the model is still able to predict the action label from just an image of the leg.
 
-\subsubsection{SVM} Given that the accuracy of the classic models aren't very high on the hard data set, we only look at the hyper-parameter searched SVM model with SIFT K-Mean clustered features for error analysis as it is the best model for action plus action type labels prediction on the ``hard'' level data set. Figure \ref{fig:svmconfusion} shows the confusion matrix of the SVM model predictions aggregated to the action labels. We see that the ``child'' positions are the most accurate category predicted, while ``upward dog'' positions are the least accurate, which are very different from the accuracies of the CNN model.
+\subsubsection{SVM, Logistic and GBT} Given that the accuracy of the classic models aren't very high on the hard data set, we look at the hyper-parameter searched SVM, Logistic and GBT models with SIFT K-Mean clustered features for error analysis using action plus action type label predictions on the ``hard'' level data set. Figure \ref{fig:svmconfusion},  \ref{fig:logisticconfusion} and \ref{fig:gbtconfusion}  show the confusion matrix of the SVM, logistic and GBT model predictions aggregated to the action labels. We see that the ``child'' positions are the most accurate category predicted for all three models, while ``upward dog'' positions are the least accurate, which are very different from the accuracies of the CNN model.
 
 \section{Discussion}
 
@@ -309,6 +309,18 @@ placeholder
 	\includegraphics[width=\linewidth]{svm\_confusion.png}
 	\caption{SVM model confusion matrix aggregated to the action labels.}
 	\label{fig:svmconfusion}
+\end{figure*}
+
+\begin{figure*}
+	\includegraphics[width=\linewidth]{logistic\_confusion.png}
+	\caption{Logistic model confusion matrix aggregated to the action labels.}
+	\label{fig:logisticconfusion}
+\end{figure*}
+
+\begin{figure*}
+	\includegraphics[width=\linewidth]{gbt\_confusion.png}
+	\caption{GBT model confusion matrix aggregated to the action labels.}
+	\label{fig:gbtconfusion}
 \end{figure*}
 
 \end{document}
