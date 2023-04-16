@@ -146,14 +146,14 @@ Each frame was extracted from the video as 256X256X3 pixel RBG image, then conve
 \subsection{Filter}
 
 \begin{figure}
-	\includegraphics[width=\linewidth]{sift\_res.png}
-	\caption{SIFT feature mapping. First row shows sift features (with and without size) extracted from train image. Second row shows the train image and test image in gray scale. Third row shows the train image features matched to test image features.}
-	\label{fig:siftres}
+	\includegraphics[width=\linewidth]{hog_images.png}
+	\caption{HOG filtering of images. First row shows easy level sample, second row shows medium level sample and third row shows hard level sample.}
+	\label{fig:hogimages}
 \end{figure}
 
 \subsubsection{Principal Component Analysis} For computing PCA, we first downsized the input grayscale frame by 50\% to 78X78 pixels and flatten the image into an array of length 6084. Then we applied PCA on the input array, keeping the top 256 principal components. Finally each of the image array was projected onto the top 256 components to create the PCA weights for each image.
 
-\subsubsection{Histogram of Oriented Gradients} In order to compute the HOG features, we first cropped the input grayscale image to 100X100 pixels, due to the amount of time HOG computation required. Then HOG feature descriptor was computed with 9 orientations, 2x2 pixels per cell and 2x2 cells per block.
+\subsubsection{Histogram of Oriented Gradients} In order to compute the HOG features, we first cropped the input grayscale image to 100X100 pixels, due to the amount of time HOG computation required. Then HOG feature descriptor was computed with 9 orientations, 2x2 pixels per cell and 2x2 cells per block. Figure \ref{fig:hogimages} shows the results of the filter applied to images of different difficulty levels. From the sample image, it's clear that HOG filtered images are best for images without much structures in the background. As the complexity of the background increases, the HOG features of the avatar become less distinguishable .
 
 \subsubsection{Scale-Invariant feature transform \& K-Mean Cluster} Bag of words is a commonly used technique in image classification. Similar to NLP, image features are used as words. We utilized SIFT features for this purpose. SIFT is one of the important algorithms that detect objects irrelevant to the scale and rotation of the image and the reference. This helps greatly when we are comparing real-world objects to an image because the features extracted are independent of the angle and scale of the image. Figure \ref{fig:siftres} shows an example of how features from one image could be mapped to another image even when the objects in the image have different orientations. We used OpenCV to extract SIFT descriptors for each image. The descriptors were group into N (N=60) clusters. Then a feature vector \(v \in \mathbb{R}^n\)   was built where each direction represented a cluster and magnitude represented the count of SIFT descriptors in that cluster for the image.
 
@@ -166,6 +166,12 @@ Each frame was extracted from the video as 256X256X3 pixel RBG image, then conve
 \subsubsection{Gradient Boosting Tree} The gradient boosting tree we trained used 100 estimators, each with a maximum depth of 3 and a learning rate of 0.1.
 
 \subsubsection{Convolutional Neural Network}  Our convolutional neural network model was inspired by the VGG-16 CNN model. The model consisted of 10 convolutional layers, where the first two layers extracted 32 features and subequent pairs of layers extracted double the number of features from the previous layers. After each pair of layers, a max pooling of size 2X2 was applied to the input features from the previous convolutional layers. Finally, two dense layers followed by a classification layer were applied to generate the model prediction. 
+
+\begin{figure}
+	\includegraphics[width=\linewidth]{sift\_res.png}
+	\caption{SIFT feature mapping. First row shows sift features (with and without size) extracted from train image. Second row shows the train image and test image in gray scale. Third row shows the train image features matched to test image features.}
+	\label{fig:siftres}
+\end{figure}
 
 \section{Evaluation}
 
