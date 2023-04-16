@@ -47,9 +47,9 @@
 
 \section{Introduction}
 
-Action recognition is an important area of research within the field of machine learning. Potential applications of machine recognition and understanding of human actions are endless, ranging from robotics and security surveillance to human-machine interactions. Successful progress in this field would translate to solutions for many real-world problems. Not only are the potentials enormous, diverse distinct research topics exist within the broad category of action recognition. Single action classification\cite{Carreira:2018qr} is one of the more widely studied topics, and shares many similar techniques to image classification \cite{Ren:2015qr}. Moving beyond single actions, localized multiple object action recognition are also possible\cite{Wu:2023qr, Gu:2018qr}. Even sequential action recognition has been attempted\cite{Yeung:2017qr}. Although tremendous progress has been made, much still remains to be done. Some of the obstacles facing the research efforts include: relative scarcity of high quality data\cite{Carreira:2018qr}, high resource requirements for training potential model architectures and difficulty in the processing and modification of input data for analysis.
+Action recognition is an important area of research within the field of machine learning. Potential applications of movement recognition and understanding of human actions are endless, ranging from robotics and security surveillance to human-machine interactions. Successful progress in this field would translate to solutions for many real-world problems. Not only are the potentials enormous, diverse distinct research topics exist within the broad category of action recognition. Single action classification\cite{Carreira:2018qr} is one of the more widely studied topics, and shares many similar techniques to image classification \cite{Ren:2015qr}. Moving beyond single actions, localized multiple object action recognition are also possible\cite{Wu:2023qr, Gu:2018qr}. Even sequential action recognition has been attempted\cite{Yeung:2017qr}. Although tremendous progress has been made, much still remains to be done. Some of the obstacles facing the research efforts include: relative scarcity of high quality data\cite{Carreira:2018qr}, high resource requirements for training potential model architectures and difficulty in the processing and modification of input data for analysis.
 
-In this paper, we propose a new method of video actions data generation by means of 3D simulation, where data generation could be customized to facilitate various research goals and specific areas of focus, including single action recogition, action orientation detection and action sequence segmentation, to name a few. Besides the presentation of our novel dataset and data generation process, we also perform several tests of action recognition using classic image classification modeling techniques and deep learning techniques, demonstrating how our dataset could be leveraged to bridge the gap between image classification tasks and 3D action recognition.
+In this paper, we propose a new method of video actions data generation by means of 3D simulation, where data generation could be customized to facilitate various research goals and specific areas of focus, including single action recogition, action orientation detection and action sequence segmentation, to name a few. In addition, we also perform several tests of action recognition using classic image classification modeling techniques and deep learning techniques, demonstrating how our dataset could be leveraged to bridge the gap between image classification tasks and 3D action recognition.
 
 \section{Background}
 
@@ -57,7 +57,7 @@ In this paper, we propose a new method of video actions data generation by means
 
 HMDB\cite{Kuehne11} is another data set that aims to further the progress in understanding action recognition.  It contains 51 actions and a total of 7000 vidoe clips. The actions within the videos are broadly categorized into five types: general facial actions, facial actions with object manipulation, general body movements, body movements with object interaction and body movements for human interaction.
 
-Overtime larger data sets have been created for video action recognition tasks such as the kinetics dataset\cite{Smaira:2020qr}, where 700 classes of actions have been categoried, each with an average of 926 sample videos.
+Over time, larger data sets have been created for video action recognition tasks such as the kinetics dataset\cite{Smaira:2020qr}, where 700 classes of actions have been categoried, each with an average of 926 sample videos.
 
 More recently, spatio-temporally localized atomic visual actions data sets (AVA)\cite{Gu:2018qr} have also been introduced, where actions by multiple objects exist within the same video sample.
 
@@ -148,7 +148,7 @@ Each video is typically about 1 second in length, sampled at 30 FPS. the size of
 
 \section{Model}
 
-For the modeling section of this research, we have extracted the frame at 50\% location of each video as input to our models, since the actions within each video are yoga poses and could be adequately represented by the middle frame. This approach would ideally be enhanced later to use multiple frames within each video, supplemented with temporal information represented by optical flow.
+Before creating models for the data sets, we have extracted the frame at 50\% location of each video as input to our models, since the actions within each video are yoga poses and could be adequately represented by the middle frame. This approach would ideally be enhanced later to use multiple frames within each video, supplemented with temporal information represented by optical flow.
 
 Each frame was extracted from the video as 256X256X3 pixel RBG image, then converted to grayscale image of 256X256 pixels. Afterwards, we cropped top, bottom, left and right of each grayscale image by 70, 30, 50 and 50 pixels to create 156X156 pixels grayscale image, in order to further reduce the size of input data.
 
@@ -186,7 +186,7 @@ Our baseline for evaluation was the SVM model trained on the unfiltered input da
 
 We started out by training our baseline models on the ``easy'' level data set, which produced a guideline for choosing models for further training. Then combinations of filters and models with the best results were trained on the ``medium'' level data set to assess the capabilities of the models. Finally the best performance models were challenged with the ``hard'' data set for evaluation.
 
-For every data set and model training, we splited the sample data into three sets: training set, validation set and test set, in the ratio of 8:1:1. For classic models, validation data set was not used at all, training set was used to train and optionally validate during training depending on the model in question (GBT), and test data set was used to compute the final accuracy of the models.
+For every data set and model training, we splitted the sample data into three sets: training set, validation set and test set, in the ratio of 8:1:1. For classic models, validation data set was not used at all, training set was used to train and optionally validate during training depending on the model in question (GBT), and test data set was used to compute the final accuracy of the models.
 
 \section{Results}
 
@@ -266,7 +266,7 @@ Although CNN model produced superior performance by a large margin, The models w
 	\label{tab:accuracycnn}
 \end{table}
 
-\subsubsection{CNN} We performed a detailed analysis of the source of error in the hard level dataset based on the results we obtain from the CNN model. Table \ref{tab:accuarcycnn} shows the accuracy results of the CNN model, which is very high across the board. \ref{fig:f1cnn} shows the f1-score of the model across all labels. We see that there are very few variations among them, however, the ``triangle'' action does see the lowest f1-score. Figure \ref{fig:f1cnn} shows the confusion matrix of the ``triangle'' action labels, which clear indicates that the confusion happens mostly within the different types of the ``triangle'' action.
+\subsubsection{Convolutional Neural Network} We performed a detailed analysis of the source of error in the hard level dataset based on the results we obtain from the CNN model. Table \ref{tab:accuarcycnn} shows the accuracy results of the CNN model, which is very high across the board. \ref{fig:f1cnn} shows the f1-score of the model across all labels. We see that there are very few variations among them, however, the ``triangle'' action does see the lowest f1-score. Figure \ref{fig:f1cnncf} shows the confusion matrix of the ``triangle'' action labels, which clear indicates that the confusion happens mostly within the different types of the ``triangle'' action.
 
 Figure \ref{fig:trianglecnn} shows the incorrect predictions made by the CNN model on the ``triangle\_3'' action and action type combination. Observing these incorrect observations reveal several causes for the errors in prediction. First some angles are difficult for the model to determine what action type is performed as in image 2 of Figure \ref{fig:trianglecnn}. Some of the images simply doesn't contain enough of the avatar to result in an accurate prediction, such as image 7, although the model is still able to predict the action label from just an image of the leg.
 
@@ -276,7 +276,7 @@ However, considering that the models are still able to classify the samples to a
 
 \section{Discussion}
 
-Our research started out with training three different types of classic image classification models(SVM, Logistic, GBT) in combination with 3 different filtering processes(PCA, HOG, SIFT) using our novel 3-D videos data generation process. The results on the ``easy'' level data set show that the all three filtering processes show significant improvement over the baseline models without any filtering, demontrating the abilities of the filters to extract salient features from the images for classifications.
+Our research started out with training three different types of classic image classification models(SVM, Logistic, GBT) in combination with 3 different filtering processes(PCA, HOG, SIFT) using our novel 3-D videos data generation process. The results on the ``easy'' level data set show that the all three filtering processes show significant improvement over the baseline models without any filtering, demonstrating the abilities of the filters to extract salient features from the images for classifications.
 
 Applying the models on the ``medium'' level data set shows a more subdued but still respectable model performances on the action labels, yet  it is clear that the classic models has reached their limits trying to distinguish between action types. However, SIFT features are able to help the models achieve higher performance through extracting features that are independent of the background, showcasing its advantages.
 
@@ -286,7 +286,7 @@ Through this process we demontrated how a flexible and comprehensive 3-D data ge
 
 \section{Future}
 
-Our work is far from finished. The research results so far is only a starting point, produced in order to showcase what could be possible with the new data generation process. Many topics remain unexplored, some of the immediate next research areas include applying 3-D convolution neural networks on the colored image data, incorporation of optical flow information and applying transformer based model for sequential images embedding and action classification, for both single and sequential actions.
+Our work is far from finished. The research results so far is only a starting point, produced in order to showcase what could be possible with the new data generation process. Many topics remain unexplored, some of the immediate next research areas include applying 3D convolutional neural networks on the colored image data, incorporation of optical flow information and applying transformer based model for sequential images embedding and action classification, for both single and sequential actions.
 
 With enhancements to the data simulation engine, we would be able to explore more complex actions and blending of actions. Multiple objects in the scene would allow us to evaluate localized multiple action recognition \cite{Wu:2023qr}. Eventually, we could develop a system with the capability to recognize continuous actions for multiple objects within a video data stream.
 
@@ -326,7 +326,7 @@ With enhancements to the data simulation engine, we would be able to explore mor
 \begin{figure}[H]
 	\includegraphics[width=\linewidth]{cnn\_confusion.png}
 	\caption{CNN model confusion across ``triangle'' action labels.}
-	\label{fig:f1cnn}
+	\label{fig:f1cnncf}
 \end{figure}
 
 \begin{figure}[H]
