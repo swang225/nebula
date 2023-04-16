@@ -4,6 +4,9 @@
 	unnumberedsections, % Comment to enable section numbering
 	twoside, % Two side traditional mode where headers and footers change between odd and even pages, comment this option to make them fixed
 ]{t0004}
+
+\usepackage{float}
+\usepackage[title]{appendix}
 \usepackage{amsfonts} 
 \usepackage{xcolor}
 \newcommand{\blue}[1]{\textcolor{blue}{#1}}
@@ -297,22 +300,27 @@ With enhancements to the data simulation engine, we would be able to explore mor
 
 %----------------------------------------------------------------------------------------
 
+\clearpage
+\begin{appendices}
+
+\section*{APPENDIX}
+
+\begin{figure}[H]
+	\includegraphics[width=\linewidth]{cnn\_f1\_scores.png}
+	\caption{F1 scores of the CNN model across labels.}
+	\label{fig:f1cnn}
+\end{figure}
+
+\begin{figure}[H]
+	\includegraphics[width=\linewidth]{cnn\_confusion.png}
+	\caption{CNN model confusion across ``triangle'' action labels.}
+	\label{fig:f1cnn}
+\end{figure}
+
 \begin{figure*}
 	\includegraphics[width=\linewidth]{actions_fig.png}
 	\caption{10 yoga poses, each with 4 different variants.}
 	\label{fig:actionsfig}
-\end{figure*}
-
-\begin{figure*}
-	\includegraphics[width=\linewidth]{cnn\_f1\_scores.png}
-	\caption{F1 scores of the CNN model across labels.}
-	\label{fig:f1cnn}
-\end{figure*}
-
-\begin{figure*}
-	\includegraphics[width=\linewidth]{cnn\_confusion.png}
-	\caption{CNN model confusion across ``triangle'' action labels.}
-	\label{fig:f1cnn}
 \end{figure*}
 
 \begin{figure*}
@@ -338,5 +346,7 @@ With enhancements to the data simulation engine, we would be able to explore mor
 	\caption{GBT model confusion matrix aggregated to the action labels.}
 	\label{fig:gbtconfusion}
 \end{figure*}
+
+\end{appendices}
 
 \end{document}
