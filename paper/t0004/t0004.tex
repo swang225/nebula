@@ -263,6 +263,22 @@ Although CNN model produced superior performance by a large margin, The models w
 	\label{tab:hsres}
 \end{table*}
 
+\subsection{T-SNE Visualization of SIFT}
+
+Next, we present a t-SNE visualization of the SIFT and K-Mean clustered features of the ``easy'', ``medium'' and ``hard'' data set in order to analyze the distinguishability of the labels within each level. Figure \ref{fig:sifttsne} displays the results. Intuitively, we would expect to see the clusters of labels to become less distinguishable as the level of difficulty increases. This is indeed the case as we move from left to right in the figures.
+
+\begin{figure}
+	\includegraphics[width=\linewidth]{sift\_tsne.png}
+	\caption{t-SNE visualization of SIFT plus K-Mean clustered features of ``easy'', ``medium'' and ``hard'' level data sets.}
+	\label{fig:sifttsne}
+\end{figure}
+
+\subsection{PCA Analysis of HOG}
+
+Although we did not apply PCA to the SIFT features, we did observe accuracy improvements applying PCA to the unfiltered image, HOG features and skeleton features. Therefore, we present an exploration of the effect of PCA on the extracted features. Figures \ref{fig:easypca} and \ref{fig:mediumpca} show the eigen images of the PCA decomposition of the ``easy'' and ``medium'' data set with HOG transformation. Looking at the first 16 eigen images of the easy level data set, there is no clearly dicernible patterns within the images themselves, due to the orientation variations in the data set.  The eign images of the medium data set, however shows that the background of the images reflect strongly in the eigen images, reducing the accuracy of the features for action identification.
+
+\section{Discussion}
+
 \subsection{Error Analysis}
 
 \begin{table} % Single column table
@@ -286,12 +302,6 @@ Figure \ref{fig:trianglecnn} shows the incorrect predictions made by the CNN mod
 \subsubsection{SVM, Logistic and GBT} Given that the accuracy of the classic models aren't very high on the hard data set, we look at the hyper-parameter searched SVM, Logistic and GBT models with SIFT K-Mean clustered features for error analysis using action plus action type label predictions on the ``hard'' level data set. Figure \ref{fig:svmconfusion},  \ref{fig:logisticconfusion} and \ref{fig:gbtconfusion}  show the confusion matrix of the SVM, logistic and GBT model predictions aggregated to the action labels. We see that the ``child'' positions are the most accurate category predicted for all three models, while ``upward dog'' positions are the least accurate, which are very different from the accuracies of the CNN model.
 
 However, considering that the models are still able to classify the samples to action labels with relatively high accuracy, it could be inferred that the models have difficulties recognizing the subtle differences in action types, which is understandable considering the low dimensionalities of the SIFT features.
-
-\subsection{PCA Analysis}
-
-Figures [???] show the eigen images of the PCA decomposition of the ``easy'', ``medium'' and ``hard'' data set.
-
-\section{Discussion}
 
 Our research started out with training three different types of classic image classification models(SVM, Logistic, GBT) in combination with 3 different filtering processes(PCA, HOG, SIFT) using our novel 3-D videos data generation process. The results on the ``easy'' level data set show that the all three filtering processes significantly improve over the baseline models, demonstrating the abilities of the filters to extract salient features from the images for classifications.
 
@@ -368,6 +378,20 @@ With enhancements to the data simulation engine, we would be able to explore mor
 	\includegraphics[width=\linewidth]{gbt\_confusion.png}
 	\caption{GBT model confusion matrix aggregated to the action labels.}
 	\label{fig:gbtconfusion}
+\end{figure}
+
+\subsection{PCA Decomposition of HOG Features}
+
+\begin{figure}[H]
+	\includegraphics[width=\linewidth]{easy\_pca.png}
+	\caption{PCA decomposition of easy level data set with HOG filter. First row contains sample HOG images from the data set.}
+	\label{fig:easypca}
+\end{figure}
+
+\begin{figure}[H]
+	\includegraphics[width=\linewidth]{medium\_pca.png}
+	\caption{PCA decomposition of medium level data set with HOG filter. First row contains sample HOG images from the data set.}
+	\label{fig:mediumpca}
 \end{figure}
 
 \end{appendices}
