@@ -255,7 +255,7 @@ An additional set of tests were performed on the medium data set and the SIFT fi
 
 Next, we took the best performing models on medium data set and applied them to the hard data set(retraining on hard data set). The results showed that CNN model still vastly outperformed other models, the SIFT feature models performed moderately well on the action only labels, but faltered when trying to predict the action plus action type labels.
 
-Finally, we performed one more round of predictions on the ``hard'' level data set with the video vision transformer model (ViViT). As expected. The video vision transformer model performed much better than any of the classic models. Interestingly, though, the transformer model did not outperform the CNN model. We believe this is due to the fact that the projection layer in the transformer model uses only one 3D convolutional layer, which is not enough to extract more detailed features.
+Finally, we performed one more round of predictions on the ``hard'' level data set with the video vision transformer model (ViViT). As expected, the video vision transformer model performed much better than any of the classic models. Interestingly, though, the transformer model did not outperform the CNN model. We believe this is due to the fact that the projection layer in the transformer model uses only one 3D convolutional layer, which is not enough to extract more detailed features.
 
 \section{Model Analysis}
 
